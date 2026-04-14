@@ -1,0 +1,905 @@
+@model IEnumerable<SmartTrafficTool.Models.Device>
+@inject IConfiguration Configuration
+@{
+    ViewData["Title"] = "Device Management";
+    ViewData["PageSubtitle"] = "Devices stay connected, map brings them to life.";
+    var mapsKey = Configuration["GoogleMaps:ApiKey"];
+    var typeOptions = Model.Select(d => d.Type).Distinct().OrderBy(t => t).ToList();
+    var statusOptions = Model.Select(d => d.Status).Distinct().OrderBy(s => s).ToList();
+    var locationOptions = Model.Select(d => d.LocationDescription ?? "Qatar").Distinct().OrderBy(l => l).ToList();
+    var typeSummary = Model.GroupBy(d => d.Type).Select(g => new { Type = g.Key, Count = g.Count() }).OrderByDescending(g => g.Count).ToList();
+    var statusSummary = Model.GroupBy(d => d.Status).Select(g => new { Status = g.Key, Count = g.Count() }).OrderByDescending(g => g.Count).ToList();
+    var onlineCount = Model.Count(d => d.Status.Equals("Online", StringComparison.OrdinalIgnoreCase));
+    var offlineCount = Model.Count(d => d.Status.Equals("Offline", StringComparison.OrdinalIgnoreCase));
+    var maintenanceCount = Model.Count(d => d.Status.Equals("Maintenance", StringComparison.OrdinalIgnoreCase));
+    string DeviceTypeIcon(string type) => type.ToLowerInvariant() switch
+    {
+        var value when value.Contains("anpr") => "fa-camera",
+        var value when value.Contains("lidar") => "fa-arrows-to-dot",
+        var value when value.Contains("radar") => "fa-tower-broadcast",
+        var value when value.Contains("environment") => "fa-cloud",
+        _ => "fa-microchip"
+    };
+
+    string DeviceStatusClass(string? status)
+    {
+        var key = (status ?? "").Trim().ToLowerInvariant();
+        if (key.Contains("online")) return "device-status device-status--online";
+        if (key.Contains("maintenance")) return "device-status device-status--maintenance";
+        if (key.Contains("offline")) return "device-status device-status--offline";
+        return "device-status device-status--unknown";
+    }
+
+    string DeviceStatusIcon(string? status)
+    {
+        var key = (status ?? "").Trim().ToLowerInvariant();
+        if (key.Contains("online")) return "fa-solid fa-circle-check";
+        if (key.Contains("maintenance")) return "fa-solid fa-screwdriver-wrench";
+        if (key.Contains("offline")) return "fa-solid fa-plug-circle-xmark";
+        return "fa-solid fa-circle-question";
+    }
+}
+
+<div class="grid device-summary-cards mb-4">
+    <div class="card device-summary-card">
+        <div class="device-summary-icon"><i class="fa-solid fa-signal"></i></div>
+        <div class="stat-number">@onlineCount</div>
+        <div class="stat-label">Online Devices</div>
+        <div class="device-summary-note">@offlineCount offline • @maintenanceCount maintenance</div>
+    </div>
+    @foreach (var row in typeSummary)
+    {
+        <div class="card device-summary-card">
+            <div class="device-summary-icon"><i class="fa-solid @DeviceTypeIcon(row.Type)"></i></div>
+            <div class="stat-number">@row.Count</div>
+            <div class="stat-label">@row.Type</div>
+            <div class="device-summary-note">Distinct deployed assets</div>
+        </div>
+    }
+</div>
+
+<div class="grid grid-2 device-page-grid">
+    <div class="device-left-column">
+        <div class="card device-list-card">
+        <div class="d-flex align-items-center justify-content-between">
+            <h3 class="section-title"><i class="fa-solid fa-camera"></i><span>Devices</span></h3>
+            <a class="btn btn-accent btn-sm" asp-action="Create"><i class="fa-solid fa-plus me-2"></i>Add Device</a>
+        </div>
+        <div class="device-list-header mt-3">
+            <input id="deviceSearchInput" class="form-control search-input device-search-input" type="text" placeholder="Search by name, type, status, or location..." />
+            <div class="device-filters mt-3">
+                <div class="device-filter-field">
+                    <label class="form-label device-filter-label" for="deviceTypeFilter">Type</label>
+                    <select id="deviceTypeFilter" class="form-select search-input">
+                        <option value="">All</option>
+                        @foreach (var type in typeOptions)
+                        {
+                            <option value="@type">@type</option>
+                        }
+                    </select>
+                </div>
+                <div class="device-filter-field">
+                    <label class="form-label device-filter-label" for="deviceStatusFilter">Status</label>
+                    <select id="deviceStatusFilter" class="form-select search-input">
+                        <option value="">All</option>
+                        @foreach (var status in statusOptions)
+                        {
+                            <option value="@status">@status</option>
+                        }
+                    </select>
+                </div>
+                <div class="device-filter-field">
+                    <label class="form-label device-filter-label" for="deviceLocationFilter">Location</label>
+                    <select id="deviceLocationFilter" class="form-select search-input">
+                        <option value="">All</option>
+                        @foreach (var location in locationOptions)
+                        {
+                            <option value="@location">@location</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="table-responsive mt-3 device-list-scroll device-table-shell">
+            <table class="table table-dark table-hover align-middle device-registry-table">
+                <colgroup>
+                    <col class="device-col-name" />
+                    <col class="device-col-type" />
+                    <col class="device-col-status" />
+                    <col class="device-col-location" />
+                    <col class="device-col-actions" />
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th scope="col" class="device-registry-th">Name</th>
+                        <th scope="col" class="device-registry-th">Type</th>
+                        <th scope="col" class="device-registry-th">Status</th>
+                        <th scope="col" class="device-registry-th">Location</th>
+                        <th scope="col" class="device-registry-th device-registry-th--actions">
+                            <span class="visually-hidden">Actions</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var device in Model)
+                    {
+                        <tr class="device-registry-row" data-device-id="@device.Id"
+                            data-device-type="@device.Type"
+                            data-device-status="@device.Status"
+                            data-device-location="@(device.LocationDescription ?? "Qatar")">
+                            <td class="device-cell-name" title="@device.Name">@device.Name</td>
+                            <td class="device-cell-type" title="@device.Type">@device.Type</td>
+                            <td class="device-cell-status">
+                                <span class="@DeviceStatusClass(device.Status)">
+                                    <i class="@DeviceStatusIcon(device.Status)" aria-hidden="true"></i>
+                                    <span class="device-status-text">@device.Status</span>
+                                </span>
+                            </td>
+                            <td class="device-cell-location" title="@(device.LocationDescription ?? "Qatar")">@(device.LocationDescription ?? "Qatar")</td>
+                            <td class="device-cell-actions">
+                                <div class="device-row-actions">
+                                    <a class="btn btn-ghost btn-sm device-row-action" asp-action="Edit" asp-route-id="@device.Id">Manage</a>
+                                    <a class="btn btn-ghost btn-sm device-row-action" asp-action="Details" asp-route-id="@device.Id">View</a>
+                                    <a class="btn btn-ghost btn-sm device-row-action device-row-action--danger" asp-action="Delete" asp-route-id="@device.Id"><i class="fa-regular fa-trash-can device-row-action-icon" aria-hidden="true"></i><span>Delete</span></a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    </div>
+    <div class="device-right-column">
+        <div class="card device-map-card">
+            <h3 class="section-title"><i class="fa-solid fa-map-location-dot"></i><span>Map View (Secondary)</span></h3>
+            <div class="map-shell mt-3">
+                <div id="deviceMap" class="map-canvas"></div>
+                <div class="map-overlay">
+                    <div class="stat-label text-white-50 small">Click a marker for the asset card · double-click marker to manage · double-click map to add</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<partial name="_DeviceDetailsModal" />
+
+<div class="modal fade" id="deviceCreateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content glass modal-dark">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Device on Map</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="deviceCreateForm">
+                    <div class="grid grid-2">
+                        <div>
+                            <label class="form-label">Name</label>
+                            <input name="name" class="form-control" placeholder="QTR-201 ANPR Camera" required />
+                        </div>
+                        <div>
+                            <label class="form-label">Type</label>
+                            <select name="type" class="form-select">
+                                @foreach (var type in typeOptions)
+                                {
+                                    <option value="@type">@type</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-2 mt-3">
+                        <div>
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                @foreach (var status in statusOptions)
+                                {
+                                    <option value="@status">@status</option>
+                                }
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Location</label>
+                            <select name="locationDescription" class="form-select">
+                                @foreach (var location in locationOptions)
+                                {
+                                    <option value="@location">@location</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-2 mt-3">
+                        <div>
+                            <label class="form-label">Latitude</label>
+                            <input name="latitude" class="form-control" readonly />
+                        </div>
+                        <div>
+                            <label class="form-label">Longitude</label>
+                            <input name="longitude" class="form-control" readonly />
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label">Stream URL</label>
+                        <input name="streamUrl" class="form-control" placeholder="https://www.youtube.com/watch?v=8JCk5M_xrBs" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                <button id="deviceCreateSubmit" type="button" class="btn btn-accent">Save Device</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deviceEditModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content glass modal-dark">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Device</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="deviceEditForm">
+                    <input type="hidden" name="id" />
+                    <div class="grid grid-2">
+                        <div>
+                            <label class="form-label">Name</label>
+                            <input name="name" class="form-control" required />
+                        </div>
+                        <div>
+                            <label class="form-label">Type</label>
+                            <select name="type" class="form-select" required>
+                                @foreach (var type in typeOptions)
+                                {
+                                    <option value="@type">@type</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-2 mt-3">
+                        <div>
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                @foreach (var status in statusOptions)
+                                {
+                                    <option value="@status">@status</option>
+                                }
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Location</label>
+                            <select name="locationDescription" class="form-select">
+                                @foreach (var location in locationOptions)
+                                {
+                                    <option value="@location">@location</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-2 mt-3">
+                        <div>
+                            <label class="form-label">Latitude</label>
+                            <input name="latitude" class="form-control" readonly />
+                        </div>
+                        <div>
+                            <label class="form-label">Longitude</label>
+                            <input name="longitude" class="form-control" readonly />
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label">Stream URL</label>
+                        <input name="streamUrl" class="form-control" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                <button id="deviceEditSubmit" type="button" class="btn btn-accent">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/@@googlemaps/markerclusterer/dist/index.min.js"></script>
+    <script src="~/js/device-details-modal.js" asp-append-version="true"></script>
+    <script src="~/js/map-marker-icons.js" asp-append-version="true"></script>
+    <script>
+        let deviceMap;
+        let deviceMarkers = new Map();
+        let deviceData = new Map();
+        let pendingLatLng;
+        let deviceCreateModal;
+        let deviceEditModal;
+        let deviceClusterer;
+        let deviceInfoWindow;
+
+        const DEVICE_ROW_URL_EDIT = "@Url.Action("Edit", new { id = 987654321 })";
+        const DEVICE_ROW_URL_DETAILS = "@Url.Action("Details", new { id = 987654321 })";
+        const DEVICE_ROW_URL_DELETE = "@Url.Action("Delete", new { id = 987654321 })";
+
+        function deviceListRowUrls(id) {
+            const s = String(id);
+            return {
+                edit: DEVICE_ROW_URL_EDIT.replace("987654321", s),
+                details: DEVICE_ROW_URL_DETAILS.replace("987654321", s),
+                delete: DEVICE_ROW_URL_DELETE.replace("987654321", s)
+            };
+        }
+
+        function deviceStatusIconClass(status) {
+            const s = (status || "").trim().toLowerCase();
+            if (s.includes("online")) return "fa-solid fa-circle-check";
+            if (s.includes("maintenance")) return "fa-solid fa-screwdriver-wrench";
+            if (s.includes("offline")) return "fa-solid fa-plug-circle-xmark";
+            return "fa-solid fa-circle-question";
+        }
+
+        function escapeHtml(value) {
+            if (value == null) {
+                return "";
+            }
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        function deviceIwStatusClass(status) {
+            const s = (status || "").trim().toLowerCase();
+            if (s.includes("online")) {
+                return "device-map-iw-status device-map-iw-status--online";
+            }
+            if (s.includes("maintenance")) {
+                return "device-map-iw-status device-map-iw-status--maintenance";
+            }
+            if (s.includes("offline")) {
+                return "device-map-iw-status device-map-iw-status--offline";
+            }
+            return "device-map-iw-status device-map-iw-status--unknown";
+        }
+
+        function deviceIwIconClass(type) {
+            const t = (type || "").toLowerCase();
+            if (t.includes("anpr") || t.includes("traffic")) {
+                return "fa-camera";
+            }
+            if (t.includes("lidar")) {
+                return "fa-arrows-to-dot";
+            }
+            if (t.includes("radar")) {
+                return "fa-tower-broadcast";
+            }
+            if (t.includes("environment")) {
+                return "fa-cloud";
+            }
+            return "fa-microchip";
+        }
+
+        function buildDeviceInfoWindowHtml(device) {
+            const la = typeof device.latitude === "number" ? device.latitude : parseFloat(device.latitude);
+            const ln = typeof device.longitude === "number" ? device.longitude : parseFloat(device.longitude);
+            const coords =
+                Number.isFinite(la) && Number.isFinite(ln)
+                    ? `${la.toFixed(5)}°, ${ln.toFixed(5)}°`
+                    : "—";
+            const iconFa = deviceIwIconClass(device.type);
+            return (
+                `<div class="device-map-iw" id="device-map-iw-root">` +
+                `<div class="device-map-iw-glow" aria-hidden="true"></div>` +
+                `<div class="device-map-iw-head">` +
+                `<div class="device-map-iw-icon-wrap" aria-hidden="true"><i class="fa-solid ${iconFa}"></i></div>` +
+                `<div class="device-map-iw-head-text">` +
+                `<div class="device-map-iw-title">${escapeHtml(device.name)}</div>` +
+                `<div class="device-map-iw-sub">${escapeHtml(device.type)} · ${escapeHtml(device.location || "Qatar")}</div>` +
+                `</div></div>` +
+                `<div class="device-map-iw-meta">` +
+                `<span class="${deviceIwStatusClass(device.status)}">${escapeHtml(device.status || "Unknown")}</span>` +
+                `<span class="device-map-iw-id">ID ${escapeHtml(String(device.id))}</span>` +
+                `</div>` +
+                `<div class="device-map-iw-coords"><i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i><span>${escapeHtml(coords)}</span></div>` +
+                `<div class="device-map-iw-actions">` +
+                `<button type="button" class="device-map-iw-btn device-map-iw-btn-details">` +
+                `<i class="fa-regular fa-eye" aria-hidden="true"></i>View details</button>` +
+                `<button type="button" class="device-map-iw-btn device-map-iw-btn-manage device-map-iw-btn--accent">` +
+                `<i class="fa-solid fa-sliders" aria-hidden="true"></i>Manage</button>` +
+                `</div></div>`
+            );
+        }
+
+        function openDeviceMapInfoWindow(device, marker) {
+            if (!deviceInfoWindow || !marker) {
+                return;
+            }
+            deviceInfoWindow.setContent(buildDeviceInfoWindowHtml(device));
+            deviceInfoWindow.open({ map: deviceMap, anchor: marker });
+            google.maps.event.addListenerOnce(deviceInfoWindow, "domready", () => {
+                const root = document.getElementById("device-map-iw-root");
+                if (!root) {
+                    return;
+                }
+                root.querySelector(".device-map-iw-btn-details")?.addEventListener("click", () => {
+                    deviceInfoWindow.close();
+                    showDeviceDetailsModal(device);
+                });
+                root.querySelector(".device-map-iw-btn-manage")?.addEventListener("click", () => {
+                    deviceInfoWindow.close();
+                    openEditModal(device);
+                });
+            });
+        }
+
+        function initDeviceMap() {
+            const qatarCenter = { lat: 25.2854, lng: 51.5310 };
+            deviceMap = new google.maps.Map(document.getElementById("deviceMap"), {
+                center: qatarCenter,
+                zoom: 15,
+                disableDoubleClickZoom: true,
+                streetViewControl: false,
+                mapTypeControl: true,
+                mapTypeControlOptions: {
+                    style: google.maps.MapTypeControlStyle.DEFAULT,
+                    position: google.maps.ControlPosition.LEFT_TOP,
+                    mapTypeIds: [
+                        google.maps.MapTypeId.ROADMAP,
+                        google.maps.MapTypeId.SATELLITE
+                    ]
+                },
+                zoomControl: true,
+                zoomControlOptions: {
+                    position: google.maps.ControlPosition.RIGHT_CENTER
+                },
+                fullscreenControl: true,
+                fullscreenControlOptions: {
+                    position: google.maps.ControlPosition.RIGHT_TOP
+                },
+                controlSize: 40,
+                styles: [
+                    { elementType: "geometry", stylers: [{ color: "#0b1424" }] },
+                    { elementType: "labels.text.stroke", stylers: [{ color: "#0b1424" }] },
+                    { elementType: "labels.text.fill", stylers: [{ color: "#8fa1bd" }] },
+                    { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#223149" }] },
+                    { featureType: "administrative", elementType: "labels.text.fill", stylers: [{ visibility: "off" }] },
+                    { featureType: "poi", elementType: "geometry", stylers: [{ color: "#101c30" }] },
+                    { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+                    { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#0f1f2c" }] },
+                    { featureType: "road", elementType: "geometry", stylers: [{ color: "#1a2536" }] },
+                    { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#1f2f45" }] },
+                    { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#283349" }] },
+                    { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#2c3c58" }] },
+                    { featureType: "transit", elementType: "geometry", stylers: [{ color: "#162233" }] },
+                    { featureType: "transit", elementType: "labels", stylers: [{ visibility: "off" }] },
+                    { featureType: "water", elementType: "geometry", stylers: [{ color: "#0a1f33" }] },
+                    { featureType: "water", elementType: "labels.text.fill", stylers: [{ visibility: "off" }] },
+                    { featureType: "road", elementType: "labels.text.fill", stylers: [{ visibility: "on" }] },
+                    { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+                    { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ visibility: "on" }] }
+                ]
+            });
+
+            loadDeviceMarkers();
+
+            deviceCreateModal = new bootstrap.Modal(document.getElementById("deviceCreateModal"));
+            deviceEditModal = new bootstrap.Modal(document.getElementById("deviceEditModal"));
+            deviceInfoWindow = new google.maps.InfoWindow({
+                maxWidth: 320,
+                pixelOffset: new google.maps.Size(0, -6)
+            });
+
+            deviceMap.addListener("dblclick", (event) => {
+                deviceInfoWindow.close();
+                pendingLatLng = event.latLng;
+                const form = document.getElementById("deviceCreateForm");
+                form.reset();
+                form.latitude.value = pendingLatLng.lat().toFixed(6);
+                form.longitude.value = pendingLatLng.lng().toFixed(6);
+                form.status.value = "Online";
+                deviceCreateModal.show();
+            });
+
+            document.querySelectorAll("tr[data-device-id]").forEach((row) => {
+                attachRowHandlers(row);
+            });
+
+            const searchInput = document.getElementById("deviceSearchInput");
+            if (searchInput) {
+                searchInput.addEventListener("input", () => filterDeviceRows(searchInput.value));
+            }
+
+            const typeFilter = document.getElementById("deviceTypeFilter");
+            const statusFilter = document.getElementById("deviceStatusFilter");
+            const locationFilter = document.getElementById("deviceLocationFilter");
+            [typeFilter, statusFilter, locationFilter].forEach((filter) => {
+                if (filter) {
+                    filter.addEventListener("change", () => filterDeviceRows(searchInput.value));
+                }
+            });
+
+            const submitBtn = document.getElementById("deviceCreateSubmit");
+            if (submitBtn) {
+                submitBtn.addEventListener("click", handleDeviceCreate);
+            }
+
+            const editBtn = document.getElementById("deviceEditSubmit");
+            if (editBtn) {
+                editBtn.addEventListener("click", handleDeviceEdit);
+            }
+        }
+
+        function attachRowHandlers(row) {
+            row.querySelectorAll("a, button").forEach((el) => {
+                el.addEventListener("click", (event) => event.stopPropagation());
+            });
+            row.addEventListener("click", async () => {
+                const id = row.getAttribute("data-device-id");
+                if (!id) {
+                    return;
+                }
+                await focusDevice(parseInt(id, 10));
+            });
+        }
+
+        async function loadDeviceMarkers() {
+            const response = await fetch("@Url.Action("MapData")");
+            if (!response.ok) {
+                return;
+            }
+            const devices = await response.json();
+            devices.forEach(addDeviceMarker);
+            if (deviceClusterer) {
+                deviceClusterer.clearMarkers();
+            }
+            if (window.markerClusterer && deviceMarkers.size > 0) {
+                deviceClusterer = new markerClusterer.MarkerClusterer({
+                    map: deviceMap,
+                    markers: Array.from(deviceMarkers.values())
+                });
+            }
+        }
+
+        function addDeviceMarker(device) {
+            deviceData.set(device.id, device);
+            const position = { lat: device.latitude, lng: device.longitude };
+            const marker = new google.maps.Marker({
+                position,
+                map: deviceMap,
+                title: device.name,
+                draggable: true,
+                icon: buildDeviceIcon(device)
+            });
+
+            marker.addListener("click", () => {
+                openDeviceMapInfoWindow(device, marker);
+            });
+
+            marker.addListener("dblclick", (ev) => {
+                if (ev && typeof ev.stop === "function") {
+                    ev.stop();
+                }
+                openEditModal(device);
+            });
+
+            marker.addListener("dragend", async (event) => {
+                device.latitude = event.latLng.lat();
+                device.longitude = event.latLng.lng();
+                marker.setIcon(buildDeviceIcon(device));
+                await fetch("@Url.Action("UpdateLocation")", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        id: device.id,
+                        latitude: event.latLng.lat(),
+                        longitude: event.latLng.lng()
+                    })
+                });
+                updateSelectedDevice(device);
+            });
+
+            deviceMarkers.set(device.id, marker);
+        }
+
+        function appendDeviceRow(device) {
+            const tbody = document.querySelector("table tbody");
+            if (!tbody) {
+                return;
+            }
+
+            const row = document.createElement("tr");
+            row.className = "device-registry-row";
+            row.setAttribute("data-device-id", device.id);
+            const statusClass = deviceStatusClass(device.status);
+            const statusIconClass = deviceStatusIconClass(device.status);
+            const u = deviceListRowUrls(device.id);
+            const name = escapeHtml(device.name);
+            const type = escapeHtml(device.type);
+            const status = escapeHtml(device.status);
+            const loc = escapeHtml(device.location || "Qatar");
+            row.innerHTML = `
+                <td class="device-cell-name" title="${name}">${name}</td>
+                <td class="device-cell-type" title="${type}">${type}</td>
+                <td class="device-cell-status"><span class="${statusClass}"><i class="${statusIconClass}" aria-hidden="true"></i><span class="device-status-text">${status}</span></span></td>
+                <td class="device-cell-location" title="${loc}">${loc}</td>
+                <td class="device-cell-actions">
+                    <div class="device-row-actions">
+                        <a class="btn btn-ghost btn-sm device-row-action" href="${u.edit}">Manage</a>
+                        <a class="btn btn-ghost btn-sm device-row-action" href="${u.details}">View</a>
+                        <a class="btn btn-ghost btn-sm device-row-action device-row-action--danger" href="${u.delete}"><i class="fa-regular fa-trash-can device-row-action-icon" aria-hidden="true"></i><span>Delete</span></a>
+                    </div>
+                </td>`;
+
+            tbody.prepend(row);
+            attachRowHandlers(row);
+        }
+
+        async function handleDeviceCreate() {
+            const form = document.getElementById("deviceCreateForm");
+            if (!form || !pendingLatLng) {
+                return;
+            }
+
+            const payload = {
+                name: form.name.value.trim(),
+                type: form.type.value.trim(),
+                status: form.status.value.trim() || "Online",
+                locationDescription: form.locationDescription.value.trim() || "Qatar",
+                latitude: pendingLatLng.lat(),
+                longitude: pendingLatLng.lng(),
+                streamUrl: form.streamUrl.value.trim() || "https://www.youtube.com/watch?v=8JCk5M_xrBs"
+            };
+
+            if (!payload.name || !payload.type) {
+                return;
+            }
+
+            const response = await fetch("@Url.Action("CreateFromMap")", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                const device = await response.json();
+                device.streamUrl = payload.streamUrl;
+                addDeviceMarker(device);
+                appendDeviceRow(device);
+                deviceCreateModal.hide();
+                const newMarker = deviceMarkers.get(device.id);
+                if (newMarker) {
+                    openDeviceMapInfoWindow(device, newMarker);
+                } else {
+                    showDeviceDetailsModal(device);
+                }
+            }
+        }
+
+        function ensureSelectHasValue(selectEl, value) {
+            if (!selectEl) {
+                return;
+            }
+            const v = value == null ? "" : String(value).trim();
+            if (!v) {
+                selectEl.selectedIndex = 0;
+                return;
+            }
+            const has = Array.from(selectEl.options).some((o) => o.value === v);
+            if (!has) {
+                const opt = document.createElement("option");
+                opt.value = v;
+                opt.textContent = v;
+                selectEl.appendChild(opt);
+            }
+            selectEl.value = v;
+        }
+
+        function openEditModal(device) {
+            if (deviceInfoWindow) {
+                deviceInfoWindow.close();
+            }
+            const detailsEl = document.getElementById("deviceDetailsModal");
+            if (detailsEl && window.bootstrap?.Modal) {
+                const detailsInst = bootstrap.Modal.getInstance(detailsEl);
+                if (detailsInst) {
+                    detailsInst.hide();
+                }
+            }
+            const form = document.getElementById("deviceEditForm");
+            if (!form) {
+                return;
+            }
+            form.id.value = device.id;
+            form.name.value = device.name;
+            ensureSelectHasValue(form.type, device.type);
+            ensureSelectHasValue(form.status, device.status);
+            ensureSelectHasValue(form.locationDescription, device.location);
+            form.latitude.value = device.latitude.toFixed(6);
+            form.longitude.value = device.longitude.toFixed(6);
+            form.streamUrl.value = device.streamUrl || "https://www.youtube.com/watch?v=8JCk5M_xrBs";
+            deviceEditModal.show();
+        }
+
+        async function handleDeviceEdit() {
+            const form = document.getElementById("deviceEditForm");
+            if (!form) {
+                return;
+            }
+
+            const payload = {
+                id: parseInt(form.id.value, 10),
+                name: form.name.value.trim(),
+                type: form.type.value.trim(),
+                status: form.status.value.trim(),
+                locationDescription: form.locationDescription.value.trim(),
+                latitude: parseFloat(form.latitude.value),
+                longitude: parseFloat(form.longitude.value),
+                streamUrl: form.streamUrl.value.trim()
+            };
+
+            const response = await fetch("@Url.Action("UpdateFromMap")", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                const updated = await response.json();
+                const existing = deviceData.get(updated.id);
+                const merged = existing || {};
+                merged.id = updated.id;
+                merged.name = updated.name;
+                merged.type = updated.type;
+                merged.status = updated.status;
+                merged.location = updated.location;
+                merged.latitude = updated.latitude;
+                merged.longitude = updated.longitude;
+                merged.streamUrl = payload.streamUrl || updated.streamUrl;
+                deviceData.set(updated.id, merged);
+                syncDeviceTableRow(merged);
+                const marker = deviceMarkers.get(updated.id);
+                if (marker) {
+                    marker.setPosition({ lat: updated.latitude, lng: updated.longitude });
+                    marker.setTitle(updated.name);
+                    marker.setIcon(buildDeviceIcon(merged));
+                }
+                deviceEditModal.hide();
+                const m = deviceMarkers.get(merged.id);
+                if (m) {
+                    openDeviceMapInfoWindow(merged, m);
+                } else {
+                    showDeviceDetailsModal(merged);
+                }
+            }
+        }
+
+        function filterDeviceRows(query) {
+            const normalized = query.trim().toLowerCase();
+            const typeFilter = document.getElementById("deviceTypeFilter");
+            const statusFilter = document.getElementById("deviceStatusFilter");
+            const locationFilter = document.getElementById("deviceLocationFilter");
+            const typeValue = typeFilter ? typeFilter.value.toLowerCase() : "";
+            const statusValue = statusFilter ? statusFilter.value.toLowerCase() : "";
+            const locationValue = locationFilter ? locationFilter.value.toLowerCase() : "";
+            document.querySelectorAll("tbody tr[data-device-id]").forEach((row) => {
+                const text = row.textContent?.toLowerCase() ?? "";
+                const rowType = row.getAttribute("data-device-type")?.toLowerCase() ?? "";
+                const rowStatus = row.getAttribute("data-device-status")?.toLowerCase() ?? "";
+                const rowLocation = row.getAttribute("data-device-location")?.toLowerCase() ?? "";
+
+                const matchText = text.includes(normalized);
+                const matchType = !typeValue || rowType === typeValue;
+                const matchStatus = !statusValue || rowStatus === statusValue;
+                const matchLocation = !locationValue || rowLocation === locationValue;
+
+                row.style.display = matchText && matchType && matchStatus && matchLocation ? "" : "none";
+            });
+
+            syncMapToFilters();
+        }
+
+        function syncMapToFilters() {
+            const visibleIds = new Set();
+            document.querySelectorAll("tbody tr[data-device-id]").forEach((row) => {
+                if (row.style.display !== "none") {
+                    const id = parseInt(row.getAttribute("data-device-id") || "0", 10);
+                    if (id) {
+                        visibleIds.add(id);
+                    }
+                }
+            });
+
+            deviceMarkers.forEach((marker, id) => {
+                if (visibleIds.has(id)) {
+                    marker.setMap(deviceMap);
+                } else {
+                    marker.setMap(null);
+                }
+            });
+
+            if (deviceClusterer) {
+                deviceClusterer.clearMarkers();
+                const visibleMarkers = Array.from(deviceMarkers.entries())
+                    .filter(([id]) => visibleIds.has(id))
+                    .map(([, marker]) => marker);
+                if (visibleMarkers.length > 0) {
+                    deviceClusterer.addMarkers(visibleMarkers);
+                }
+            }
+        }
+
+        function syncDeviceTableRow(device) {
+            const row = document.querySelector(`tr[data-device-id="${device.id}"]`);
+            if (!row) {
+                return;
+            }
+            row.setAttribute("data-device-type", device.type);
+            row.setAttribute("data-device-status", device.status);
+            row.setAttribute("data-device-location", device.location || "Qatar");
+            const cells = row.querySelectorAll("td");
+            if (cells.length < 5) {
+                return;
+            }
+            cells[0].textContent = device.name;
+            cells[0].title = device.name;
+            cells[1].textContent = device.type;
+            cells[1].title = device.type;
+            cells[2].replaceChildren();
+            const badge = document.createElement("span");
+            badge.className = deviceStatusClass(device.status);
+            const ic = document.createElement("i");
+            ic.className = deviceStatusIconClass(device.status);
+            ic.setAttribute("aria-hidden", "true");
+            const stLabel = document.createElement("span");
+            stLabel.className = "device-status-text";
+            stLabel.textContent = device.status;
+            badge.appendChild(ic);
+            badge.appendChild(stLabel);
+            cells[2].appendChild(badge);
+            cells[3].textContent = device.location || "Qatar";
+            cells[3].title = device.location || "Qatar";
+        }
+
+        function buildDeviceIcon(device) {
+            if (window.MapMarkerIcons) {
+                return MapMarkerIcons.deviceIcon(google.maps, device.type, device.status);
+            }
+            return {
+                path: google.maps.SymbolPath.CIRCLE,
+                fillColor: "#f2c94c",
+                fillOpacity: 0.95,
+                strokeColor: "#27ae60",
+                strokeOpacity: 1,
+                strokeWeight: 3,
+                scale: 7
+            };
+        }
+
+        async function focusDevice(id) {
+            let marker = deviceMarkers.get(id);
+            if (!marker) {
+                const response = await fetch("@Url.Action("MapDevice")?id=" + id);
+                if (!response.ok) {
+                    return;
+                }
+                const device = await response.json();
+                deviceData.set(device.id, device);
+                addDeviceMarker(device);
+                marker = deviceMarkers.get(id);
+            }
+
+            const position = marker.getPosition();
+            if (position) {
+                deviceMap.panTo(position);
+                deviceMap.setZoom(15);
+                const device = deviceData.get(id);
+                if (device) {
+                    openDeviceMapInfoWindow(device, marker);
+                }
+            }
+        }
+
+        window.initDeviceMap = initDeviceMap;
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=@mapsKey&callback=initDeviceMap&loading=async" async></script>
+}

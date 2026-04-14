@@ -1,0 +1,280 @@
+@model SmartTrafficTool.ViewModels.PocRouteSimulatorViewModel
+@using System.Text.Json
+@{
+    ViewData["Title"] = "POC route simulator";
+    var initialPathJson = JsonSerializer.Serialize(Model.PathDeviceIds ?? []);
+}
+
+@if (TempData["PocDemoSuccess"] is string ok && !string.IsNullOrWhiteSpace(ok))
+{
+    <div class="alert alert-success mb-4" role="status">@ok</div>
+}
+
+@if (TempData["PocDemoError"] is string err && !string.IsNullOrWhiteSpace(err))
+{
+    <div class="alert alert-danger mb-4" role="alert">@err</div>
+}
+
+<div class="card mb-4">
+    <h2 class="section-title mb-2"><i class="fa-solid fa-route me-2" aria-hidden="true"></i>Simulate vehicle path</h2>
+    <p class="stat-label mb-4">
+        Define plate metadata, then build an <strong>ordered list of ANPR cameras</strong>. One transaction is inserted per camera with timestamps moving forward along the path (all within the last 24 hours UTC). You can <strong>save</strong> a path by name and <strong>load</strong> it later from the list.
+    </p>
+
+    <div class="poc-saved-path-toolbar glass p-3 rounded-3 border border-secondary border-opacity-25 mb-4">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-6">
+                <label class="form-label mb-1" for="pocSavedRouteSelect">Saved paths</label>
+                <select id="pocSavedRouteSelect" class="form-select form-select-sm">
+                    <option value="">— Select a saved path —</option>
+                    @foreach (var s in Model.SavedPaths)
+                    {
+                        if (Model.SelectedSavedRouteId == s.Id)
+                        {
+                            <option value="@s.Id" data-device-ids="@s.DeviceIdsCsv" selected="selected">@s.Name (@s.CameraCount camera(s))</option>
+                        }
+                        else
+                        {
+                            <option value="@s.Id" data-device-ids="@s.DeviceIdsCsv">@s.Name (@s.CameraCount camera(s))</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-6 d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-outline-light btn-sm" id="pocLoadSavedBtn" title="Replace current path with selection">
+                    <i class="fa-solid fa-folder-open me-1" aria-hidden="true"></i>Load path
+                </button>
+                <a class="btn btn-ghost btn-sm" asp-action="Index" title="Clear route query">Reset view</a>
+            </div>
+        </div>
+    </div>
+
+    <form asp-action="Generate" method="post" id="pocRouteForm">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label class="form-label">Camera path (order = travel direction)</label>
+            <div class="poc-path-builder glass p-3 rounded-3 border border-secondary border-opacity-25">
+                <div class="row g-2 align-items-end mb-3">
+                    <div class="col-md-8">
+                        <select id="pocPickDevice" class="form-select form-select-sm">
+                            <option value="">— Select camera to add —</option>
+                            @foreach (var d in Model.AnprCameras)
+                            {
+                                <option value="@d.Id">@d.Id — @d.Name (@d.LocationDescription)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex gap-2">
+                        <button type="button" class="btn btn-outline-light btn-sm flex-grow-1" id="pocAddDevice">Add to path</button>
+                        <button type="button" class="btn btn-ghost btn-sm" id="pocClearPath" title="Clear path">Clear</button>
+                    </div>
+                </div>
+                <ul id="pocPathList" class="list-group list-group-flush poc-path-list mb-0"></ul>
+                <p id="pocPathEmpty" class="stat-label mb-0 mt-2 @((Model.PathDeviceIds?.Count ?? 0) > 0 ? "d-none" : "")">No cameras in path yet.</p>
+                <div id="pocPathFields"></div>
+            </div>
+            <span asp-validation-for="PathDeviceIds" class="text-danger small"></span>
+        </div>
+
+        <div class="grid grid-2 mb-3">
+            <div>
+                <label asp-for="PlateText" class="form-label">Plate text</label>
+                <input asp-for="PlateText" class="form-control" maxlength="16" placeholder="e.g. Q123456" autocomplete="off" />
+                <span asp-validation-for="PlateText" class="text-danger small"></span>
+            </div>
+            <div class="d-flex flex-wrap gap-3">
+                <div class="flex-grow-1" style="min-width: 140px;">
+                    <label asp-for="PlateType" class="form-label">Plate type</label>
+                    <select asp-for="PlateType" class="form-select">
+                        <option value="Private">Private</option>
+                        <option value="Commercial">Commercial</option>
+                        <option value="Government">Government</option>
+                        <option value="Transport">Transport</option>
+                        <option value="Taxi">Taxi</option>
+                    </select>
+                </div>
+                <div class="flex-grow-1" style="min-width: 140px;">
+                    <label asp-for="Country" class="form-label">Country</label>
+                    <select asp-for="Country" class="form-select">
+                        <option value="Qatar">Qatar</option>
+                        <option value="UAE">UAE</option>
+                        <option value="KSA">KSA</option>
+                        <option value="Oman">Oman</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3 poc-save-path-row glass p-3 rounded-3 border border-secondary border-opacity-25">
+            <div class="fw-semibold small mb-2 text-secondary">Save current path</div>
+            <div class="row g-2 align-items-end">
+                <div class="col-md-8">
+                    <label class="form-label mb-1" for="savePathNameInput">Path name</label>
+                    <input type="text" id="savePathNameInput" name="savePathName" form="pocSavePathForm" class="form-control form-control-sm" maxlength="120" placeholder="e.g. West Bay loop" autocomplete="off" />
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" form="pocSavePathForm" class="btn btn-outline-warning btn-sm w-100" id="pocSavePathSubmit">
+                        <i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i>Save path
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-4 d-flex flex-wrap gap-3">
+            <label class="form-check">
+                <input asp-for="AlertOnLastSite" class="form-check-input" />
+                <span class="form-check-label">Alert on <strong>last</strong> camera only</span>
+            </label>
+            <label class="form-check">
+                <input asp-for="SpeedViolationOnLastSite" class="form-check-input" />
+                <span class="form-check-label">Speed violation (≥120 km/h) on <strong>last</strong> camera only</span>
+            </label>
+        </div>
+
+        <button type="submit" class="btn btn-accent" id="pocSubmitBtn">
+            <i class="fa-solid fa-plus me-2" aria-hidden="true"></i>Insert transactions along path
+        </button>
+        <a class="btn btn-ghost ms-2" asp-controller="Search" asp-action="Index" asp-route-window="24h">Open search (24h)</a>
+    </form>
+
+    <form asp-action="SavePath" method="post" id="pocSavePathForm" class="d-none" aria-hidden="true">
+        @Html.AntiForgeryToken()
+        <div id="pocSavePathFields"></div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const initialPathIds = @Html.Raw(initialPathJson);
+            const pick = document.getElementById("pocPickDevice");
+            const addBtn = document.getElementById("pocAddDevice");
+            const clearBtn = document.getElementById("pocClearPath");
+            const listEl = document.getElementById("pocPathList");
+            const fieldsEl = document.getElementById("pocPathFields");
+            const saveFieldsEl = document.getElementById("pocSavePathFields");
+            const emptyEl = document.getElementById("pocPathEmpty");
+            const form = document.getElementById("pocRouteForm");
+            const saveForm = document.getElementById("pocSavePathForm");
+            const loadSelect = document.getElementById("pocSavedRouteSelect");
+            const loadBtn = document.getElementById("pocLoadSavedBtn");
+
+            const path = Array.isArray(initialPathIds)
+                ? initialPathIds.map(function (x) { return parseInt(x, 10); }).filter(function (id) { return id > 0; })
+                : [];
+
+            function syncToContainer(container, inputName) {
+                if (!container) return;
+                container.innerHTML = "";
+                path.forEach(function (id) {
+                    const inp = document.createElement("input");
+                    inp.type = "hidden";
+                    inp.name = inputName;
+                    inp.value = String(id);
+                    container.appendChild(inp);
+                });
+            }
+
+            function syncGenerateFields() {
+                syncToContainer(fieldsEl, "PathDeviceIds");
+            }
+
+            function syncSaveFields() {
+                syncToContainer(saveFieldsEl, "pathDeviceIds");
+            }
+
+            function render() {
+                listEl.innerHTML = "";
+                path.forEach(function (id, idx) {
+                    const opt = pick && pick.querySelector('option[value="' + id + '"]');
+                    const label = opt ? opt.textContent : ("Device #" + id);
+                    const li = document.createElement("li");
+                    li.className = "list-group-item d-flex align-items-center justify-content-between gap-2 poc-path-item";
+                    li.innerHTML =
+                        '<span class="small"><span class="text-secondary me-2">' + (idx + 1) + ".</span>" + label + "</span>" +
+                        '<span class="btn-group btn-group-sm">' +
+                        '<button type="button" class="btn btn-outline-secondary poc-up" data-i="' + idx + '" title="Move up">↑</button>' +
+                        '<button type="button" class="btn btn-outline-secondary poc-down" data-i="' + idx + '" title="Move down">↓</button>' +
+                        '<button type="button" class="btn btn-outline-danger poc-remove" data-i="' + idx + '" title="Remove">×</button>' +
+                        "</span>";
+                    listEl.appendChild(li);
+                });
+                emptyEl.classList.toggle("d-none", path.length > 0);
+                syncGenerateFields();
+                syncSaveFields();
+            }
+
+            function addSelected() {
+                const v = pick && pick.value;
+                if (!v) return;
+                const id = parseInt(v, 10);
+                if (!id) return;
+                path.push(id);
+                pick.value = "";
+                render();
+            }
+
+            addBtn && addBtn.addEventListener("click", addSelected);
+            clearBtn &&
+                clearBtn.addEventListener("click", function () {
+                    path.length = 0;
+                    render();
+                });
+
+            loadBtn &&
+                loadBtn.addEventListener("click", function () {
+                    if (!loadSelect || !loadSelect.value) return;
+                    const opt = loadSelect.options[loadSelect.selectedIndex];
+                    const csv = opt.getAttribute("data-device-ids") || "";
+                    path.length = 0;
+                    csv.split(",").forEach(function (s) {
+                        const id = parseInt(s.trim(), 10);
+                        if (id > 0) path.push(id);
+                    });
+                    render();
+                });
+
+            listEl.addEventListener("click", function (e) {
+                const rm = e.target.closest(".poc-remove");
+                const up = e.target.closest(".poc-up");
+                const dn = e.target.closest(".poc-down");
+                if (rm) {
+                    const i = parseInt(rm.getAttribute("data-i"), 10);
+                    path.splice(i, 1);
+                    render();
+                } else if (up) {
+                    const i = parseInt(up.getAttribute("data-i"), 10);
+                    if (i > 0) {
+                        const t = path[i - 1];
+                        path[i - 1] = path[i];
+                        path[i] = t;
+                        render();
+                    }
+                } else if (dn) {
+                    const i = parseInt(dn.getAttribute("data-i"), 10);
+                    if (i < path.length - 1) {
+                        const t = path[i + 1];
+                        path[i + 1] = path[i];
+                        path[i] = t;
+                        render();
+                    }
+                }
+            });
+
+            form &&
+                form.addEventListener("submit", function () {
+                    syncGenerateFields();
+                });
+
+            saveForm &&
+                saveForm.addEventListener("submit", function () {
+                    syncSaveFields();
+                });
+
+            render();
+        })();
+    </script>
+}

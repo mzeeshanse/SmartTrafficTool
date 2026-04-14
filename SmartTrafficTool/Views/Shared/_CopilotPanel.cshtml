@@ -1,0 +1,61 @@
+<div id="copilot-shell" class="copilot-shell" data-api-url="@Url.Content("~/api/Copilot/message")">
+    <button type="button"
+            id="copilot-fab"
+            class="copilot-fab btn btn-accent"
+            aria-expanded="false"
+            aria-controls="copilot-panel"
+            title="Open AI Co-Pilot">
+        <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+        <span class="copilot-fab-label">Co-Pilot</span>
+    </button>
+
+    <div id="copilot-panel"
+         class="copilot-panel glass"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="copilot-panel-title"
+         hidden>
+        <div class="copilot-panel-header">
+            <div>
+                <div id="copilot-panel-title" class="copilot-panel-title">Central AI Co-Pilot</div>
+                <div class="copilot-panel-subtitle">Quick picks · Search · Navigate · Insights · Voice</div>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm copilot-close" aria-label="Close Co-Pilot">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div id="copilot-messages" class="copilot-messages"></div>
+
+        <div class="copilot-quick-picks" role="toolbar" aria-label="Quick phrases">
+            <span class="copilot-quick-picks-label">Quick:</span>
+            <button type="button" class="copilot-quick-pick" data-copilot-message="Summary for 7 days">Summary for 7 days</button>
+            <button type="button" class="copilot-quick-pick" data-copilot-message="Summary for Saudi Plate for 7 days">Summary for Saudi Plate for 7 days</button>
+            <button type="button" class="copilot-quick-pick" data-copilot-message="Summary for All Taxi 7 days">Summary for All Taxi 7 days</button>
+            <button type="button" class="copilot-quick-pick" data-copilot-message="Open Device 57">Open Device 57</button>
+            <button type="button" class="copilot-quick-pick" data-copilot-message="Open All Devices">Open All Devices</button>
+            <button type="button" class="copilot-quick-pick" data-copilot-message="Summary of Plate with text ***" title="Replace *** with the plate fragment you want">Summary of Plate with text ***</button>
+            <button type="button" class="copilot-quick-pick" data-copilot-message="Investigate plate number 668928">Investigate plate number 668928</button>
+        </div>
+
+        <div class="copilot-panel-footer">
+            <div id="copilot-status" class="copilot-status" aria-live="polite"></div>
+            <div class="copilot-input-row">
+                <textarea id="copilot-input"
+                          class="form-control copilot-input"
+                          rows="2"
+                          placeholder="Try: insights, open devices, find QTR-051 taxi last 24 hours…"
+                          autocomplete="off"></textarea>
+                <div class="copilot-input-actions">
+                    <button type="button" id="copilot-mic" class="btn btn-outline-light btn-sm" title="Voice input">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
+                    <button type="button" id="copilot-send" class="btn btn-accent btn-sm">
+                        <i class="fa-solid fa-paper-plane me-1"></i>Send
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="copilot-backdrop" class="copilot-backdrop" hidden></div>
+</div>

@@ -1,0 +1,62 @@
+@{
+    ViewData["Title"] = "Analytics Dashboard";
+}
+
+<div class="grid grid-4">
+    <div class="card">
+        <div class="stat-number">+18%</div>
+        <div class="stat-label">Violation Trend</div>
+    </div>
+    <div class="card">
+        <div class="stat-number">74%</div>
+        <div class="stat-label">Detection Accuracy</div>
+    </div>
+    <div class="card">
+        <div class="stat-number">12</div>
+        <div class="stat-label">Anomalies Today</div>
+    </div>
+    <div class="card">
+        <div class="stat-number">5</div>
+        <div class="stat-label">High Risk Zones</div>
+    </div>
+</div>
+
+<div class="grid grid-2 mt-4">
+    <div class="card">
+        <h3 class="section-title"><i class="fa-solid fa-chart-column"></i><span>Live + Historical Insights</span></h3>
+        <div class="stat-label">Auto-refresh simulation every 60 seconds.</div>
+        <div class="map-shell mt-3" style="min-height: 240px;">
+            <div class="map-overlay">
+                <div class="map-title">Risk Heatmap Overlay</div>
+                <div class="stat-label">Zones with high violations are highlighted.</div>
+            </div>
+            <span class="map-marker alert" style="top: 35%; left: 48%;"></span>
+            <span class="map-marker alert" style="top: 60%; left: 70%;"></span>
+        </div>
+    </div>
+    <div class="card">
+        <h3 class="section-title"><i class="fa-solid fa-lightbulb"></i><span>AI Recommendations</span></h3>
+        <div class="list-pill mb-2">Deploy 2 patrols near SZR interchanges.</div>
+        <div class="list-pill mb-2">Reposition Camera 12B to cover exit ramp.</div>
+        <div class="list-pill mb-2">Increase speed enforcement 18:00–22:00.</div>
+        <div class="list-pill">Activate night mode for desert corridor.</div>
+    </div>
+</div>
+
+<div class="grid grid-3 mt-4">
+    <div class="card">
+        <h4 class="section-title"><i class="fa-solid fa-wave-square"></i><span>Pattern Detection</span></h4>
+        <div class="stat-label">Recurring violations around business districts.</div>
+        <div class="map-shell mt-3" style="min-height: 160px;"></div>
+    </div>
+    <div class="card">
+        <h4 class="section-title"><i class="fa-solid fa-users-viewfinder"></i><span>Behavioral Analysis</span></h4>
+        <div class="stat-label">Clusters of aggressive driving detected.</div>
+        <div class="map-shell mt-3" style="min-height: 160px;"></div>
+    </div>
+    <div class="card">
+        <h4 class="section-title"><i class="fa-solid fa-chart-simple"></i><span>Predictive Forecast</span></h4>
+        <div class="stat-label">Forecasted 8% rise in violations this weekend.</div>
+        <div class="map-shell mt-3" style="min-height: 160px;"></div>
+    </div>
+</div>

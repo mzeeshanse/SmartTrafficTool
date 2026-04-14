@@ -1,0 +1,296 @@
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@{
+    var mapsKey = Configuration["GoogleMaps:ApiKey"];
+}
+
+<div class="command-c2-root">
+    <div id="commandControlMapShell" class="command-c2-map-shell">
+        <div id="commandControlMap" class="command-c2-map" role="application" aria-label="Traffic monitoring map"></div>
+        <div id="c2HeatHoverTip" class="command-c2-heat-hover-tip" role="tooltip" aria-live="polite" hidden></div>
+
+        <aside class="command-c2-layers glass" aria-label="Map layers">
+            <header class="command-c2-layers-head">
+                <div class="command-c2-layers-title"><i class="fa-solid fa-layer-group me-2" aria-hidden="true"></i>Map layers</div>
+                <p class="command-c2-layers-tagline">Loads the <strong>visible area</strong> only. <strong>One section open at a time</strong> — opening another closes the rest.</p>
+            </header>
+
+            <div class="command-c2-layers-stack">
+                <details class="command-c2-panel">
+                    <summary class="command-c2-panel__summary">
+                        <span class="command-c2-panel__icon" aria-hidden="true"><i class="fa-solid fa-clock"></i></span>
+                        <span class="command-c2-panel__text">
+                            <span class="command-c2-panel__title">Heatmap time window</span>
+                            <span class="command-c2-panel__meta" id="c2HeatmapPanelSubtitle">Last 48 hours · 48 h span</span>
+                        </span>
+                        <span class="command-c2-panel__chev" aria-hidden="true"></span>
+                    </summary>
+                    <div class="command-c2-panel__body">
+                        <p class="command-c2-filter-hint command-c2-heatmap-window-hint">
+                            Heatmaps &amp; hover counts use <strong>ANPR reads</strong> between the edges below (hours before now). Max span 7 days.
+                        </p>
+                        <div class="command-c2-heatmap-range" role="group" aria-label="Heatmap time range in hours ago">
+                            <div class="command-c2-heatmap-range-row">
+                                <label class="command-c2-heatmap-range-label" for="c2HeatmapFromHours">
+                                    Older edge <span id="c2HeatmapFromHoursVal" class="command-c2-heatmap-range-val">48</span> h ago
+                                </label>
+                                <input
+                                    id="c2HeatmapFromHours"
+                                    type="range"
+                                    class="form-range form-range-sm command-c2-heatmap-range-input"
+                                    min="1"
+                                    max="168"
+                                    value="48"
+                                    aria-valuemin="1"
+                                    aria-valuemax="168"
+                                    aria-valuenow="48" />
+                            </div>
+                            <div class="command-c2-heatmap-range-row">
+                                <label class="command-c2-heatmap-range-label" for="c2HeatmapToHours">
+                                    Newer edge <span id="c2HeatmapToHoursVal" class="command-c2-heatmap-range-val">0</span> h ago<span class="command-c2-heatmap-range-now"> (0 = now)</span>
+                                </label>
+                                <input
+                                    id="c2HeatmapToHours"
+                                    type="range"
+                                    class="form-range form-range-sm command-c2-heatmap-range-input"
+                                    min="0"
+                                    max="47"
+                                    value="0"
+                                    aria-valuemin="0"
+                                    aria-valuemax="47"
+                                    aria-valuenow="0" />
+                            </div>
+                            <div id="c2HeatmapWindowSummary" class="command-c2-device-meta command-c2-heatmap-window-summary" aria-live="polite"></div>
+                        </div>
+                    </div>
+                </details>
+
+                <details class="command-c2-panel">
+                    <summary class="command-c2-panel__summary">
+                        <span class="command-c2-panel__icon" aria-hidden="true"><i class="fa-solid fa-sliders"></i></span>
+                        <span class="command-c2-panel__text">
+                            <span class="command-c2-panel__title">Device filters</span>
+                            <span class="command-c2-panel__meta">Search, status &amp; type</span>
+                        </span>
+                        <span class="command-c2-panel__chev" aria-hidden="true"></span>
+                    </summary>
+                    <div class="command-c2-panel__body">
+                        <label class="command-c2-filter-search-label" for="c2DeviceSearch">Name search</label>
+                        <input id="c2DeviceSearch" type="search" class="form-control form-control-sm command-c2-filter-search" placeholder="e.g. QTR-012" autocomplete="off" />
+                        <div class="command-c2-filter-chips" role="group" aria-label="Filter by status">
+                            <span class="command-c2-filter-chip-title">Status</span>
+                            <label class="command-c2-chip"><input type="checkbox" id="c2FilterOnline" checked /><span class="command-c2-chip__text">Online</span></label>
+                            <label class="command-c2-chip"><input type="checkbox" id="c2FilterOffline" /><span class="command-c2-chip__text">Offline</span></label>
+                            <label class="command-c2-chip"><input type="checkbox" id="c2FilterWarning" /><span class="command-c2-chip__text">Warning</span></label>
+                        </div>
+                        <div class="command-c2-filter-chips" role="group" aria-label="Filter by device type">
+                            <span class="command-c2-filter-chip-title">Type</span>
+                            <label class="command-c2-chip"><input type="checkbox" id="c2TypeAnpr" checked /><span class="command-c2-chip__text">ANPR</span></label>
+                            <label class="command-c2-chip"><input type="checkbox" id="c2TypeLidar" /><span class="command-c2-chip__text">Lidar</span></label>
+                            <label class="command-c2-chip"><input type="checkbox" id="c2TypeRadar" /><span class="command-c2-chip__text">Radar</span></label>
+                            <label class="command-c2-chip"><input type="checkbox" id="c2TypeEnv" /><span class="command-c2-chip__text">Environmental</span></label>
+                        </div>
+                        <p class="command-c2-filter-hint">Leave a group unchecked to include <strong>all</strong> values. Updates after pan, zoom, or filter changes.</p>
+                        <div id="c2DeviceFilterMeta" class="command-c2-device-meta" aria-live="polite"></div>
+                    </div>
+                </details>
+
+                <details class="command-c2-panel">
+                    <summary class="command-c2-panel__summary">
+                        <span class="command-c2-panel__icon" aria-hidden="true"><i class="fa-solid fa-map"></i></span>
+                        <span class="command-c2-panel__text">
+                            <span class="command-c2-panel__title">Map overlays</span>
+                            <span class="command-c2-panel__meta">Layers &amp; demo tools</span>
+                        </span>
+                        <span class="command-c2-panel__chev" aria-hidden="true"></span>
+                    </summary>
+                    <div class="command-c2-panel__body command-c2-panel__body--overlays">
+                        <div class="command-c2-switch-row">
+                            <label class="command-c2-switch command-c2-switch--tilt" for="c2Layer3dTilt">
+                                <span class="command-c2-switch__copy">
+                                    <span class="command-c2-switch__title">3D oblique view</span>
+                                    <span class="command-c2-switch__meta">Strong tilt (max per zoom) · Shift+drag to adjust</span>
+                                </span>
+                                <span class="command-c2-switch__track-wrap">
+                                    <input id="c2Layer3dTilt" type="checkbox" class="command-c2-switch__input" checked />
+                                    <span class="command-c2-switch__slider" aria-hidden="true"></span>
+                                </span>
+                            </label>
+                        </div>
+                        <div class="command-c2-switch-row">
+                            <label class="command-c2-switch command-c2-switch--devices" for="c2LayerDevices">
+                                <span class="command-c2-switch__copy">
+                                    <span class="command-c2-switch__title">Devices</span>
+                                    <span class="command-c2-switch__meta">In view + filters above</span>
+                                </span>
+                                <span class="command-c2-switch__track-wrap">
+                                    <input id="c2LayerDevices" type="checkbox" class="command-c2-switch__input" checked />
+                                    <span class="command-c2-switch__slider" aria-hidden="true"></span>
+                                </span>
+                            </label>
+                        </div>
+                        <div class="command-c2-switch-row">
+                            <label class="command-c2-switch command-c2-switch--alert" for="c2LayerAlerts">
+                                <span class="command-c2-switch__copy">
+                                    <span class="command-c2-switch__title">Alert heatmap</span>
+                                    <span class="command-c2-switch__meta">Red / coral intensity</span>
+                                </span>
+                                <span class="command-c2-switch__track-wrap">
+                                    <input id="c2LayerAlerts" type="checkbox" class="command-c2-switch__input" checked />
+                                    <span class="command-c2-switch__slider" aria-hidden="true"></span>
+                                </span>
+                            </label>
+                        </div>
+                        <div class="command-c2-switch-row">
+                            <label class="command-c2-switch command-c2-switch--violation" for="c2LayerViolations">
+                                <span class="command-c2-switch__copy">
+                                    <span class="command-c2-switch__title">Violation heatmap</span>
+                                    <span class="command-c2-switch__meta">Amber / gold gradient</span>
+                                </span>
+                                <span class="command-c2-switch__track-wrap">
+                                    <input id="c2LayerViolations" type="checkbox" class="command-c2-switch__input" checked />
+                                    <span class="command-c2-switch__slider" aria-hidden="true"></span>
+                                </span>
+                            </label>
+                        </div>
+                        <div class="command-c2-switch-row">
+                            <label class="command-c2-switch command-c2-switch--transactions" for="c2LayerTransactions">
+                                <span class="command-c2-switch__copy">
+                                    <span class="command-c2-switch__title">Transaction heatmap</span>
+                                    <span class="command-c2-switch__meta">Green = low · red = high density</span>
+                                </span>
+                                <span class="command-c2-switch__track-wrap">
+                                    <input id="c2LayerTransactions" type="checkbox" class="command-c2-switch__input" checked />
+                                    <span class="command-c2-switch__slider" aria-hidden="true"></span>
+                                </span>
+                            </label>
+                        </div>
+                        <div class="command-c2-switch-row command-c2-switch-row--demo">
+                            <label class="command-c2-switch command-c2-switch--demo" for="c2SimulateLive">
+                                <span class="command-c2-switch__copy">
+                                    <span class="command-c2-switch__title">Demo: simulate live event</span>
+                                    <span class="command-c2-switch__meta">Periodic popup + toast (not real-time)</span>
+                                </span>
+                                <span class="command-c2-switch__track-wrap">
+                                    <input id="c2SimulateLive" type="checkbox" class="command-c2-switch__input" />
+                                    <span class="command-c2-switch__slider" aria-hidden="true"></span>
+                                </span>
+                            </label>
+                        </div>
+                        <button type="button" class="command-c2-sim-btn w-100" id="c2SimulatePopupNow">
+                            <i class="fa-solid fa-bolt me-2" aria-hidden="true"></i>Trigger simulated popup
+                        </button>
+                        @* <p class="command-c2-layers-hint command-c2-layers-hint--tight command-c2-layers-hint--panel mb-0">
+                            Hover the map near heat (with a heatmap on) for <strong>detection counts</strong>. Data is <strong>historical</strong> until a live feed exists. Demo popups use camera coordinates only.
+                        </p> *@
+                    </div>
+                </details>
+            </div>
+        </aside>
+    </div>
+
+    @if (string.IsNullOrWhiteSpace(mapsKey))
+    {
+        <div class="alert alert-warning m-3">Configure <code>GoogleMaps:ApiKey</code> in appsettings to load the map.</div>
+    }
+</div>
+
+<!-- Dispatch patrol confirmation -->
+<div class="modal fade" id="c2DispatchModal" tabindex="-1" aria-labelledby="c2DispatchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content command-c2-modal">
+            <div class="modal-header border-secondary border-opacity-25">
+                <h5 class="modal-title" id="c2DispatchModalLabel"><i class="fa-solid fa-route me-2 text-warning"></i>Dispatch patrol</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">Confirm patrol dispatch to <strong id="c2DispatchDeviceLabel">device</strong>?</p>
+            </div>
+            <div class="modal-footer border-secondary border-opacity-25">
+                <button type="button" class="btn btn-ghost btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-accent btn-sm" id="c2DispatchConfirm">Confirm dispatch</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 2000;">
+    <div id="c2Toast" class="toast command-c2-toast text-bg-dark border border-warning border-opacity-50" role="alert" aria-live="polite" aria-atomic="true">
+        <div class="toast-header command-c2-toast-header border-warning border-opacity-25">
+            <i class="fa-solid fa-circle-info text-warning me-2"></i>
+            <strong class="me-auto">Traffic Monitoring Hub</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="c2ToastBody"></div>
+    </div>
+</div>
+
+<partial name="_DeviceDetailsModal" />
+
+<!-- Demo still for Live Snapshot (Traffic Monitoring Hub device popup) -->
+<div class="modal fade" id="c2SnapshotModal" tabindex="-1" aria-labelledby="c2SnapshotModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content command-c2-modal border border-warning border-opacity-35">
+            <div class="modal-header border-secondary border-opacity-25">
+                <h5 class="modal-title text-warning" id="c2SnapshotModalLabel"><i class="fa-solid fa-camera me-2" aria-hidden="true"></i>Camera snapshot</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <p class="small text-secondary px-3 pt-3 mb-2" id="c2SnapshotCaption"></p>
+                <div class="c2-snapshot-dummy-wrap">
+                    <img id="c2SnapshotImg" class="c2-snapshot-dummy-img" src="@Url.Content("~/images/anpr/Camera1.svg")" asp-append-version="true" alt="Camera 1 snapshot (demo)" width="960" height="540" />
+                    <div class="c2-snapshot-dummy-badge"><i class="fa-solid fa-video me-1" aria-hidden="true"></i>Demo</div>
+                </div>
+                <p class="small text-center text-secondary py-3 mb-0 px-3">Simulated still — not a live feed.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Demo live traffic — recent ANPR read images (Traffic Monitoring Hub device popup) -->
+<div class="modal fade" id="c2LiveTrafficModal" tabindex="-1" aria-labelledby="c2LiveTrafficModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content command-c2-modal border border-warning border-opacity-35">
+            <div class="modal-header border-secondary border-opacity-25">
+                <h5 class="modal-title text-warning" id="c2LiveTrafficModalLabel"><i class="fa-solid fa-tower-broadcast me-2" aria-hidden="true"></i>Live traffic · ANPR images</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <p class="small text-secondary px-3 pt-3 mb-2" id="c2LiveTrafficCaption"></p>
+                <div class="c2-live-traffic-wrap">
+                    <div class="c2-live-traffic-demo-badge"><i class="fa-solid fa-road me-1" aria-hidden="true"></i>Demo</div>
+                    <div class="c2-live-traffic-grid">
+                        @foreach (var file in new[] { "record-1.svg", "record-2.svg", "record-3.svg", "record-4.svg", "record-5.svg" })
+                        {
+                            <div class="c2-live-traffic-cell">
+                                <img src="@Url.Content("~/images/anpr/" + file)" asp-append-version="true" alt="Demo ANPR capture" loading="lazy" />
+                                <span class="c2-live-traffic-cell__label">ANPR read</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <p class="small text-center text-secondary py-3 mb-0 px-3">Simulated recent captures for this camera — not a live data feed.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/command-control-panels.js" asp-append-version="true"></script>
+    <script src="~/js/device-details-modal.js" asp-append-version="true"></script>
+    @if (!string.IsNullOrWhiteSpace(mapsKey))
+    {
+        <script src="~/js/map-marker-icons.js" asp-append-version="true"></script>
+        <script src="~/js/command-control-map.js" asp-append-version="true"></script>
+        <script>
+            window.commandControlConfig = {
+                mapDataUrl: '@Url.Action("MapData", "CommandAndControl")',
+                simulateIntervalMs: 32000,
+                investigationSearchUrl: '@Url.Action("Index", "Search")',
+                @* Optional: e.g. https://streams.example/camera/{id} *@
+                deviceLiveStreamUrlTemplate: '',
+                c2SnapshotDemoImageUrl: '@Url.Content("~/images/anpr/Camera1.svg")'
+            };
+        </script>
+        <script src="https://maps.googleapis.com/maps/api/js?key=@mapsKey&amp;v=weekly&amp;libraries=visualization&amp;callback=initCommandControlMap&amp;loading=async" async defer></script>
+    }
+}

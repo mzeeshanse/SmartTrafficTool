@@ -1,0 +1,192 @@
+@* Shared with Devices/Index and Devices/Details — map marker opens this modal. Layout matches Search transaction card theme. *@
+@{
+    var cameraStillPrimary = Url.Content("~/images/anpr/Camera.jpg");
+}
+<div class="modal fade" id="deviceDetailsModal" tabindex="-1" aria-hidden="true"
+     data-device-url-edit="@Url.Action("Edit", "Devices", new { id = 999999 })"
+     data-device-url-details="@Url.Action("Details", "Devices", new { id = 999999 })">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content glass modal-dark device-modal-transaction-content">
+            <div class="modal-header device-modal-transaction-header border-0">
+                <span class="visually-hidden" id="deviceDetailsModalLabel">Device details</span>
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="deviceModalHero" class="device-modal-hero map-popup-media device-modal-hero-anpr">
+                    <div id="deviceModalAnprStills" class="device-modal-anpr-stills" aria-hidden="true">
+                        <img id="deviceModalStillPrimary" class="device-modal-still-img" src="@cameraStillPrimary" asp-append-version="true" alt="Camera site view" />
+                    </div>
+                    <div class="device-modal-stream-shell">
+                        <div id="deviceModalStreamWrap" class="device-modal-stream-fill">
+                            <iframe id="deviceStreamFrame" class="device-modal-iframe" src="about:blank" title="Device feed" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="map-popup-body device-modal-card-body">
+                    <div class="map-popup-trans-head">
+                        <div class="map-popup-trans-head-main">
+                            <div class="map-popup-veh-icon" aria-hidden="true">
+                                <i id="selectedDeviceTitleIcon" class="fa-solid fa-video"></i>
+                            </div>
+                            <div class="map-popup-trans-titles">
+                                <div class="map-popup-title-row">
+                                    <h4 class="map-popup-plate-title mb-0" id="selectedDeviceName">Device</h4>
+                                    <div id="selectedDeviceStatusPill" class="map-popup-risk map-popup-risk--low">
+                                        <span class="map-popup-risk-dot" aria-hidden="true"></span>
+                                        <span class="map-popup-risk-text" id="selectedDeviceStatusText">—</span>
+                                    </div>
+                                </div>
+                                <p class="map-popup-trans-sub mb-0" id="selectedDeviceSub">—</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="map-popup-kpis">
+                        <div class="map-popup-kpi">
+                            <span class="map-popup-kpi-label">Type</span>
+                            <span class="map-popup-kpi-value" id="deviceKpiType">—</span>
+                        </div>
+                        <div class="map-popup-kpi">
+                            <span class="map-popup-kpi-label">Status</span>
+                            <span class="map-popup-kpi-value" id="deviceKpiStatus">—</span>
+                        </div>
+                        <div class="map-popup-kpi">
+                            <span class="map-popup-kpi-label">Zone</span>
+                            <span class="map-popup-kpi-value" id="deviceKpiZone">—</span>
+                        </div>
+                    </div>
+
+                    <div class="map-popup-pill-row" id="deviceModalTagRow"></div>
+
+                    <div class="map-popup-trans-meta-row">
+                        <span class="map-popup-meta-item"><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span id="selectedDeviceLocationMeta">—</span></span>
+                        <span class="map-popup-meta-item"><i class="fa-solid fa-crosshairs" aria-hidden="true"></i><span id="selectedDeviceCoords">—</span></span>
+                    </div>
+                    <p class="map-popup-trans-detail mb-0" id="selectedDeviceDetail">—</p>
+
+                    <div class="map-popup-trans-actions">
+                        <a id="deviceModalManageLink" class="map-popup-foot-btn" href="#">Manage</a>
+                        <a id="deviceModalViewLink" class="map-popup-foot-btn map-popup-foot-btn--ghost" href="#">Full details</a>
+                    </div>
+                </div>
+
+                <div class="device-modal-extra px-3 pb-2 pt-2">
+                    <div id="deviceModalSectionAnpr" class="device-modal-type-section">
+                        <div class="mt-2 d-flex flex-wrap gap-2">
+                            <button class="map-popup-foot-btn map-popup-foot-btn--accent" type="button"><i class="fa-solid fa-camera-retro me-2"></i>Capture snapshot</button>
+                        </div>
+                        <div class="mt-3">
+                            <h4 class="section-title device-modal-section-heading"><i class="fa-solid fa-id-card"></i><span>Last detected plates</span></h4>
+                            <div class="list-pill mt-2 device-modal-list-pill">DXB-3021 • 2 mins ago</div>
+                            <div class="list-pill mt-2 device-modal-list-pill">AJM-4410 • 7 mins ago</div>
+                            <div class="list-pill mt-2 device-modal-list-pill">SHJ-1180 • 11 mins ago</div>
+                        </div>
+                    </div>
+
+                    <div id="deviceModalSectionLidar" class="device-modal-type-section d-none">
+                        <div class="mt-1">
+                            <h4 class="section-title device-modal-section-heading"><i class="fa-solid fa-layer-group"></i><span>LiDAR telemetry</span></h4>
+                            <p class="stat-label device-modal-section-blurb mb-2">Point-cloud road monitoring (simulated values).</p>
+                            <div class="device-modal-metric-grid">
+                                <div class="map-popup-kpi device-modal-metric-kpi">
+                                    <span class="map-popup-kpi-label">Scan rate</span>
+                                    <span class="map-popup-kpi-value" id="lidarScanRate">—</span>
+                                </div>
+                                <div class="map-popup-kpi device-modal-metric-kpi">
+                                    <span class="map-popup-kpi-label">Max range</span>
+                                    <span class="map-popup-kpi-value" id="lidarRange">—</span>
+                                </div>
+                                <div class="map-popup-kpi device-modal-metric-kpi">
+                                    <span class="map-popup-kpi-label">Points / second</span>
+                                    <span class="map-popup-kpi-value" id="lidarPoints">—</span>
+                                </div>
+                                <div class="map-popup-kpi device-modal-metric-kpi">
+                                    <span class="map-popup-kpi-label">Tracked objects</span>
+                                    <span class="map-popup-kpi-value" id="lidarObjects">—</span>
+                                </div>
+                                <div class="map-popup-kpi device-modal-metric-kpi">
+                                    <span class="map-popup-kpi-label">Vertical FOV</span>
+                                    <span class="map-popup-kpi-value" id="lidarFov">—</span>
+                                </div>
+                                <div class="map-popup-kpi device-modal-metric-kpi">
+                                    <span class="map-popup-kpi-label">Weather filter</span>
+                                    <span class="map-popup-kpi-value" id="lidarWeather">—</span>
+                                </div>
+                            </div>
+                            <p class="map-popup-trans-detail device-modal-telemetry-foot mb-0 mt-2" id="lidarCalibration">—</p>
+                        </div>
+                    </div>
+
+                    <div id="deviceModalSectionRadar" class="device-modal-type-section d-none">
+                        <div class="mt-1">
+                            <h4 class="section-title device-modal-section-heading"><i class="fa-solid fa-tower-broadcast"></i><span>Radar telemetry</span></h4>
+                            <p class="stat-label device-modal-section-blurb mb-2">Microwave speed &amp; presence (simulated).</p>
+                            <div class="device-modal-metric-grid">
+                                <div class="map-popup-kpi device-modal-metric-kpi">
+                                    <span class="map-popup-kpi-label">Speed accuracy</span>
+                                    <span class="map-popup-kpi-value" id="radarAccuracy">—</span>
+                                </div>
+                                <div class="map-popup-kpi device-modal-metric-kpi">
+                                    <span class="map-popup-kpi-label">Detection range</span>
+                                    <span class="map-popup-kpi-value" id="radarRange">—</span>
+                                </div>
+                                <div class="map-popup-kpi device-modal-metric-kpi">
+                                    <span class="map-popup-kpi-label">Lanes covered</span>
+                                    <span class="map-popup-kpi-value" id="radarLanes">—</span>
+                                </div>
+                                <div class="map-popup-kpi device-modal-metric-kpi">
+                                    <span class="map-popup-kpi-label">Approach / recede</span>
+                                    <span class="map-popup-kpi-value" id="radarDirection">—</span>
+                                </div>
+                                <div class="map-popup-kpi device-modal-metric-kpi">
+                                    <span class="map-popup-kpi-label">Firmware</span>
+                                    <span class="map-popup-kpi-value" id="radarFirmware">—</span>
+                                </div>
+                                <div class="map-popup-kpi device-modal-metric-kpi">
+                                    <span class="map-popup-kpi-label">Interference</span>
+                                    <span class="map-popup-kpi-value" id="radarInterference">—</span>
+                                </div>
+                            </div>
+                            <p class="map-popup-trans-detail device-modal-telemetry-foot mb-0 mt-2" id="radarAlertNote">—</p>
+                        </div>
+                    </div>
+
+                    <div id="deviceModalSectionEnv" class="device-modal-type-section d-none">
+                        <div class="mt-1">
+                            <h4 class="section-title device-modal-section-heading"><i class="fa-solid fa-cloud-sun"></i><span>Environmental telemetry</span></h4>
+                            <p class="stat-label device-modal-section-blurb mb-2">Roadside environment metrics (simulated).</p>
+                            <div class="device-modal-metric-grid">
+                                <div class="map-popup-kpi device-modal-metric-kpi">
+                                    <span class="map-popup-kpi-label">Air quality (AQI)</span>
+                                    <span class="map-popup-kpi-value" id="envAqi">—</span>
+                                </div>
+                                <div class="map-popup-kpi device-modal-metric-kpi">
+                                    <span class="map-popup-kpi-label">PM2.5</span>
+                                    <span class="map-popup-kpi-value" id="envPm25">—</span>
+                                </div>
+                                <div class="map-popup-kpi device-modal-metric-kpi">
+                                    <span class="map-popup-kpi-label">Noise level</span>
+                                    <span class="map-popup-kpi-value" id="envNoise">—</span>
+                                </div>
+                                <div class="map-popup-kpi device-modal-metric-kpi">
+                                    <span class="map-popup-kpi-label">Temperature</span>
+                                    <span class="map-popup-kpi-value" id="envTemp">—</span>
+                                </div>
+                                <div class="map-popup-kpi device-modal-metric-kpi">
+                                    <span class="map-popup-kpi-label">Humidity</span>
+                                    <span class="map-popup-kpi-value" id="envHumidity">—</span>
+                                </div>
+                                <div class="map-popup-kpi device-modal-metric-kpi">
+                                    <span class="map-popup-kpi-label">Wind (avg)</span>
+                                    <span class="map-popup-kpi-value" id="envWind">—</span>
+                                </div>
+                            </div>
+                            <p class="map-popup-trans-detail device-modal-telemetry-foot mb-0 mt-2" id="envCalibration">—</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

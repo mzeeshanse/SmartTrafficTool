@@ -1,0 +1,2074 @@
+@model SmartTrafficTool.ViewModels.HybridSearchViewModel
+@inject IConfiguration Configuration
+@{
+    ViewData["Title"] = "AI Forensic Search";
+    var mapsKey = Configuration["GoogleMaps:ApiKey"];
+    string VehicleClassLabel(int? id) => id switch
+    {
+        1 => "Sedan",
+        2 => "SUV",
+        3 => "Pickup",
+        4 => "Bus",
+        5 => "Truck",
+        _ => "—"
+    };
+
+    string PlateTypeLabel(int id) => id switch
+    {
+        1 => "Private",
+        2 => "Commercial",
+        3 => "Government",
+        4 => "Transport",
+        5 => "Taxi",
+        _ => "Private"
+    };
+
+    string PlateCountryLabel(int id) => id switch
+    {
+        1 => "Qatar",
+        2 => "UAE",
+        3 => "KSA",
+        4 => "Oman",
+        _ => "Qatar"
+    };
+
+    var filterWindowKey = string.IsNullOrWhiteSpace(Model.FilterWindow) ? "24h" : Model.FilterWindow!;
+    var filterWindowLabel = filterWindowKey switch
+    {
+        "24h" => "Last 24 hours",
+        "48h" => "Last 48 hours",
+        "today" => "Today",
+        "7d" => "Last 7 days",
+        _ => filterWindowKey
+    };
+    var queryContextLabel = string.IsNullOrWhiteSpace(Model.Query) ? "Fleet-wide scope" : $"“{Model.Query}”";
+
+    string TransactionStatusLabel(int code) => code switch
+    {
+        1 => "Cleared",
+        2 => "Under review",
+        3 => "Violation",
+        _ => "—"
+    };
+
+    string SearchListStatusPillClass(int code) => code switch
+    {
+        1 => "search-list-pill search-list-pill--success",
+        2 => "search-list-pill search-list-pill--warn",
+        3 => "search-list-pill search-list-pill--alert",
+        _ => "search-list-pill search-list-pill--neutral"
+    };
+}
+
+<div class="card">
+    <form method="get" asp-action="Index">
+        <input type="hidden" id="currentViewInput" name="view" value="@Model.CurrentView" />
+        <div class="d-flex flex-wrap gap-3 align-items-center">
+            <label class="investigation-mode-icon" title="Investigation Search">
+                <input id="investigationModeToggle" name="investigationMode" type="checkbox" value="true" @(Model.IsInvestigationMode ? "checked" : null) />
+                <span class="investigation-mode-icon-shell" aria-hidden="true">
+                    <i class="fa-solid fa-user-secret"></i>
+                </span>
+            </label>
+            <div class="flex-grow-1">
+                <input id="searchInput" name="q" class="form-control search-input" type="text" value="@Model.Query" placeholder="Search plate, vehicle, zone, or case ID..." />
+            </div>
+            <button id="searchMicBtn" class="btn btn-ghost" type="button" aria-label="Voice search"><i class="fa-solid fa-microphone"></i></button>
+            <button id="searchSubmitBtn" class="btn btn-accent" type="submit"><i class="fa-solid fa-magnifying-glass me-2"></i>Search</button>
+            <button id="resetFiltersBtn" class="btn btn-ghost" type="button"><i class="fa-solid fa-rotate-left me-2"></i>Reset Filters</button>
+            <button class="btn btn-ghost" type="button" data-toggle="filters"><i class="fa-solid fa-sliders me-2"></i>Filters</button>
+        </div>
+        <div id="voiceStatus" class="stat-label mt-2">Voice input: idle</div>
+        <div class="filter-panel">
+            <div class="grid grid-3 mt-3">
+                <div>
+                    <label class="form-label">Plate Type</label>
+                    <select id="plateTypeSelect" name="plateType" class="form-select search-input">
+                        <option value="All" selected="@(string.IsNullOrWhiteSpace(Model.FilterType) || Model.FilterType == "All")">All</option>
+                        <option value="Private" selected="@(Model.FilterType == "Private")">Private</option>
+                        <option value="Commercial" selected="@(Model.FilterType == "Commercial")">Commercial</option>
+                        <option value="Government" selected="@(Model.FilterType == "Government")">Government</option>
+                        <option value="Transport" selected="@(Model.FilterType == "Transport")">Transport</option>
+                        <option value="Taxi" selected="@(Model.FilterType == "Taxi")">Taxi</option>
+                    </select>
+                    <input type="hidden" id="plateTypeRawInput" name="plateTypeRaw" value="@Model.FilterType" />
+                </div>
+                <div>
+                    <label class="form-label">Country</label>
+                    <select id="countrySelect" name="country" class="form-select search-input">
+                        <option value="All" selected="@(string.IsNullOrWhiteSpace(Model.FilterCountry) || Model.FilterCountry == "All")">All</option>
+                        <option value="Qatar" selected="@(Model.FilterCountry == "Qatar")">Qatar</option>
+                        <option value="UAE" selected="@(Model.FilterCountry == "UAE")">UAE</option>
+                        <option value="KSA" selected="@(Model.FilterCountry == "KSA")">KSA</option>
+                        <option value="Oman" selected="@(Model.FilterCountry == "Oman")">Oman</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Time Window</label>
+                    <select id="windowSelect" name="window" class="form-select search-input">
+                        <option value="24h" selected="@(Model.FilterWindow == "24h")">Last 24 Hours</option>
+                        <option value="48h" selected="@(Model.FilterWindow == "48h")">Last 48 Hours</option>
+                        <option value="today" selected="@(Model.FilterWindow == "today")">Today</option>
+                        <option value="7d" selected="@(Model.FilterWindow == "7d")">7 Days</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Device</label>
+                    <select id="deviceIdInput" name="deviceId" class="form-select search-input">
+                        <option value="">All</option>
+                        @foreach (var device in Model.DeviceOptions)
+                        {
+                            <option value="@device.Id" selected="@(Model.FilterDeviceId == device.Id)">@device.Id - @device.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="filter-incident-scope">
+                    <label class="form-label">Incident scope</label>
+                    <div class="d-flex flex-column gap-1 small">
+                        <label class="form-check mb-0">
+                            <input class="form-check-input" type="checkbox" name="alertsOnly" value="true" @(Model.FilterAlertsOnly ? "checked" : null) />
+                            <span class="form-check-label">Alerts only</span>
+                        </label>
+                        <label class="form-check mb-0">
+                            <input class="form-check-input" type="checkbox" name="speedViolationsOnly" value="true" @(Model.FilterSpeedViolationsOnly ? "checked" : null) />
+                            <span class="form-check-label">Speed violations only (≥120 km/h)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="search-layout mt-4@(Model.IsInvestigationMode ? " search-layout--investigation" : "")">
+    <div class="search-results-column">
+        <div class="result-view-tabs">
+            <button class="btn btn-ghost btn-sm tab-btn @(Model.CurrentView == "map" ? "active" : "")" type="button" data-view="map">Map View</button>
+            <button class="btn btn-ghost btn-sm tab-btn @(Model.CurrentView == "card" ? "active" : "")" type="button" data-view="card">Card View</button>
+            <button class="btn btn-ghost btn-sm tab-btn @(Model.CurrentView == "list" ? "active" : "")" type="button" data-view="list">List View</button>
+        </div>
+
+        <div id="mapView" class="result-view @(Model.CurrentView == "map" ? "active" : "")">
+            <div class="card common-map-section result-panel-card">
+                <div class="map-shell search-main-map-shell">
+                    <div id="searchMap" class="map-canvas"></div>
+                    <div class="map-overlay">
+                        @* <div class="map-title">View on Map</div>
+                        <div class="stat-label">Shared situational map for both executive and investigation search.</div> *@
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="cardView" class="result-view @(Model.CurrentView == "card" ? "active" : "")">
+            <div class="card result-panel-card">
+                <div class="result-panel-body">
+                    <div class="grid results-grid @(Model.IsInvestigationMode ? "" : "results-grid--executive")">
+                        @foreach (var item in Model.Results)
+                        {
+                            var plate = item.Transaction.PLATE_TEXT ?? "—";
+                            var vehicleClass = VehicleClassLabel(item.Classification?.VEH_TYPE_ID);
+                            var plateType = PlateTypeLabel(item.Transaction.PLATE_TYPE_ID);
+                            var country = PlateCountryLabel(item.Transaction.PLATE_ORIGIN_ID);
+                            var subtitle = $"{plateType} · {vehicleClass}";
+                            var isAlert = item.Transaction.IS_ALERTED;
+                            var riskClass = isAlert ? "map-popup-risk--high" : "map-popup-risk--low";
+                            var riskLabel = isAlert ? "High risk" : "Standard";
+                            var flagCount = isAlert ? "1" : "0";
+                            var localCap = item.Transaction.CREATED_DATE_TIME.ToLocalTime();
+                            var capturedShort = localCap.ToString("MMM d, hh:mm tt");
+                            var capturedDetail = localCap.ToString("M/d/yyyy, h:mm:ss tt");
+                            var deviceLabel = item.Device?.Name ?? $"Device {item.Transaction.DEVICE_ID}";
+                            var speedVal = item.Transaction.SPEED;
+                            var speedText = $"{speedVal} km/h";
+                            <div class="transaction-result-wrap">
+                                <article class="map-popup-card map-popup-card--transaction transaction-result-card">
+                                    <div class="map-popup-media">
+                                        <img class="map-popup-image" src="/images/anpr/Anpr1.jpg" alt="Transaction frame" />
+                                        <div class="map-popup-plate-crop">
+                                            <div class="map-popup-plate-text">@plate</div>
+                                        </div>
+                                    </div>
+                                    <div class="map-popup-body">
+                                        <div class="map-popup-trans-head">
+                                            <div class="map-popup-trans-head-main">
+                                                <div class="map-popup-veh-icon" aria-hidden="true">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" />
+                                                        <circle cx="7" cy="17" r="2" /><path d="M9 17h6" /><circle cx="17" cy="17" r="2" />
+                                                    </svg>
+                                                </div>
+                                                <div class="map-popup-trans-titles">
+                                                    <div class="map-popup-title-row">
+                                                        <h4 class="map-popup-plate-title">@plate</h4>
+                                                        <div class="map-popup-risk @riskClass">
+                                                            <span class="map-popup-risk-dot" aria-hidden="true"></span>
+                                                            <span class="map-popup-risk-text">@riskLabel</span>
+                                                        </div>
+                                                    </div>
+                                                    <p class="map-popup-trans-sub">@subtitle</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="map-popup-kpis">
+                                            <div class="map-popup-kpi">
+                                                <span class="map-popup-kpi-label">Class</span>
+                                                <span class="map-popup-kpi-value">@vehicleClass</span>
+                                            </div>
+                                            <div class="map-popup-kpi">
+                                                <span class="map-popup-kpi-label">Origin</span>
+                                                <span class="map-popup-kpi-value">@country</span>
+                                            </div>
+                                            <div class="map-popup-kpi">
+                                                <span class="map-popup-kpi-label">Flags</span>
+                                                <span class="map-popup-kpi-value">@flagCount</span>
+                                            </div>
+                                        </div>
+                                        <div class="map-popup-pill-row">
+                                            @if (isAlert)
+                                            {
+                                                <span class="map-popup-pill map-popup-pill--danger">Alert detection</span>
+                                            }
+                                            @if (speedVal >= 120)
+                                            {
+                                                <span class="map-popup-pill map-popup-pill--warn">High speed</span>
+                                            }
+                                            @if (!isAlert && speedVal < 120)
+                                            {
+                                                <span class="map-popup-pill map-popup-pill--neutral">ANPR read</span>
+                                            }
+                                        </div>
+                                        <div class="map-popup-trans-meta-row">
+                                            <span class="map-popup-meta-item"><i class="fa-solid fa-location-dot" aria-hidden="true"></i>@deviceLabel</span>
+                                            <span class="map-popup-meta-item"><i class="fa-regular fa-clock" aria-hidden="true"></i>@capturedShort</span>
+                                        </div>
+                                        <p class="map-popup-trans-detail">Captured @capturedDetail · Speed @speedText · Status @item.Transaction.TRANSACTION_STATUS</p>
+                                        <div class="map-popup-trans-actions">
+                                            <button class="map-popup-foot-btn view-on-map-btn"
+                                                    type="button"
+                                                    data-plate="@(item.Transaction.PLATE_TEXT ?? string.Empty)"
+                                                    data-lat="@(item.Device?.Latitude)"
+                                                    data-lng="@(item.Device?.Longitude)"
+                                                    data-time="@item.Transaction.CREATED_DATE_TIME.ToString("o")"
+                                                    data-device="@deviceLabel">View on map</button>
+                                            <a class="map-popup-foot-btn map-popup-foot-btn--ghost" asp-controller="Cases" asp-action="Index">Add to case</a>
+                                            @if (Model.IsInvestigationMode)
+                                            {
+                                                <button class="map-popup-foot-btn map-popup-foot-btn--accent live-track-btn"
+                                                        type="button"
+                                                        data-plate="@(item.Transaction.PLATE_TEXT ?? string.Empty)"
+                                                        data-lat="@(item.Device?.Latitude)"
+                                                        data-lng="@(item.Device?.Longitude)">Live tracking</button>
+                                            }
+                                        </div>
+                                    </div>
+                                </article>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                @if (Model.TotalPages > 1)
+                {
+                    <div class="result-panel-footer">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span class="stat-label">Page @Model.CurrentPage of @Model.TotalPages</span>
+                            <div class="d-flex gap-2">
+                                <a class="btn btn-ghost btn-sm pagination-link @(Model.CurrentPage <= 1 ? "disabled" : string.Empty)"
+                                   asp-action="Index"
+                                   asp-route-q="@Model.Query"
+                                   asp-route-plateType="@Model.FilterType"
+                                   asp-route-country="@Model.FilterCountry"
+                                   asp-route-window="@Model.FilterWindow"
+                                   asp-route-deviceId="@Model.FilterDeviceId"
+                                   asp-route-alertsOnly="@Model.FilterAlertsOnly"
+                                   asp-route-speedViolationsOnly="@Model.FilterSpeedViolationsOnly"
+                                   asp-route-investigationMode="@Model.IsInvestigationMode"
+                                   asp-route-view="@Model.CurrentView"
+                                   asp-route-page="@(Model.CurrentPage - 1)">Previous</a>
+                                <a class="btn btn-ghost btn-sm pagination-link @(Model.CurrentPage >= Model.TotalPages ? "disabled" : string.Empty)"
+                                   asp-action="Index"
+                                   asp-route-q="@Model.Query"
+                                   asp-route-plateType="@Model.FilterType"
+                                   asp-route-country="@Model.FilterCountry"
+                                   asp-route-window="@Model.FilterWindow"
+                                   asp-route-deviceId="@Model.FilterDeviceId"
+                                   asp-route-alertsOnly="@Model.FilterAlertsOnly"
+                                   asp-route-speedViolationsOnly="@Model.FilterSpeedViolationsOnly"
+                                   asp-route-investigationMode="@Model.IsInvestigationMode"
+                                   asp-route-view="@Model.CurrentView"
+                                   asp-route-page="@(Model.CurrentPage + 1)">Next</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div id="listView" class="result-view search-list-view @(Model.CurrentView == "list" ? "active" : "")">
+            <div class="card result-panel-card search-list-panel">
+                <div class="result-panel-body result-table-body">
+                    <div class="table-responsive search-list-table-wrap">
+                        <table class="table table-dark table-hover align-middle search-results-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col" class="search-list-th">Plate</th>
+                                    <th scope="col" class="search-list-th">Device</th>
+                                    <th scope="col" class="search-list-th search-list-th--num">Speed</th>
+                                    <th scope="col" class="search-list-th">Status</th>
+                                    <th scope="col" class="search-list-th">Alert</th>
+                                    <th scope="col" class="search-list-th">Captured</th>
+                                    <th scope="col" class="search-list-th">Vehicle</th>
+                                    <th scope="col" class="search-list-th search-list-th--actions"><span class="visually-hidden">Actions</span></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.Results)
+                                {
+                                    var deviceLabel = item.Device?.Name ?? $"Device {item.Transaction.DEVICE_ID}";
+                                    var capLocal = item.Transaction.CREATED_DATE_TIME.ToLocalTime();
+                                    <tr class="search-list-row">
+                                        <td class="search-list-td search-list-td--plate">
+                                            <span class="search-list-plate">@(item.Transaction.PLATE_TEXT ?? "Unknown")</span>
+                                        </td>
+                                        <td class="search-list-td">
+                                            <span class="search-list-device-name">@deviceLabel</span>
+                                            <span class="search-list-device-id">#@item.Transaction.DEVICE_ID</span>
+                                        </td>
+                                        <td class="search-list-td search-list-td--speed">
+                                            <span class="search-list-speed">@item.Transaction.SPEED</span><span class="search-list-speed-unit"> km/h</span>
+                                        </td>
+                                        <td class="search-list-td">
+                                            <span class="@SearchListStatusPillClass(item.Transaction.TRANSACTION_STATUS)">@TransactionStatusLabel(item.Transaction.TRANSACTION_STATUS)</span>
+                                        </td>
+                                        <td class="search-list-td">
+                                            @if (item.Transaction.IS_ALERTED)
+                                            {
+                                                <span class="search-list-pill search-list-pill--alert"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>Alert</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="search-list-pill search-list-pill--ok"><i class="fa-solid fa-shield-check" aria-hidden="true"></i>Clear</span>
+                                            }
+                                        </td>
+                                        <td class="search-list-td search-list-td--time">
+                                            <span class="search-list-time">@capLocal.ToString("MMM d, yyyy")</span>
+                                            <span class="search-list-time-sub">@capLocal.ToString("h:mm tt")</span>
+                                        </td>
+                                        <td class="search-list-td search-list-td--class">@VehicleClassLabel(item.Classification?.VEH_TYPE_ID)</td>
+                                        <td class="search-list-td search-list-td--actions">
+                                            <div class="search-list-actions">
+                                                <button class="btn btn-ghost btn-sm search-list-action-btn view-on-map-btn"
+                                                        type="button"
+                                                        data-plate="@(item.Transaction.PLATE_TEXT ?? string.Empty)"
+                                                        data-lat="@(item.Device?.Latitude)"
+                                                        data-lng="@(item.Device?.Longitude)"
+                                                        data-time="@item.Transaction.CREATED_DATE_TIME.ToString("o")"
+                                                        data-device="@(item.Device?.Name ?? "Device")"><i class="fa-solid fa-map-location-dot me-1" aria-hidden="true"></i>View on Map</button>
+                                                @if (Model.IsInvestigationMode)
+                                                {
+                                                    <button class="btn btn-ghost btn-sm search-list-action-btn live-track-btn"
+                                                            type="button"
+                                                            data-plate="@(item.Transaction.PLATE_TEXT ?? string.Empty)"
+                                                            data-lat="@(item.Device?.Latitude)"
+                                                            data-lng="@(item.Device?.Longitude)"><i class="fa-solid fa-location-crosshairs me-1" aria-hidden="true"></i>Live Tracking</button>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                @if (Model.TotalPages > 1)
+                {
+                    <div class="result-panel-footer">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span class="stat-label">Page @Model.CurrentPage of @Model.TotalPages</span>
+                            <div class="d-flex gap-2">
+                                <a class="btn btn-ghost btn-sm pagination-link @(Model.CurrentPage <= 1 ? "disabled" : string.Empty)"
+                                   asp-action="Index"
+                                   asp-route-q="@Model.Query"
+                                   asp-route-plateType="@Model.FilterType"
+                                   asp-route-country="@Model.FilterCountry"
+                                   asp-route-window="@Model.FilterWindow"
+                                   asp-route-deviceId="@Model.FilterDeviceId"
+                                   asp-route-alertsOnly="@Model.FilterAlertsOnly"
+                                   asp-route-speedViolationsOnly="@Model.FilterSpeedViolationsOnly"
+                                   asp-route-investigationMode="@Model.IsInvestigationMode"
+                                   asp-route-view="@Model.CurrentView"
+                                   asp-route-page="@(Model.CurrentPage - 1)">Previous</a>
+                                <a class="btn btn-ghost btn-sm pagination-link @(Model.CurrentPage >= Model.TotalPages ? "disabled" : string.Empty)"
+                                   asp-action="Index"
+                                   asp-route-q="@Model.Query"
+                                   asp-route-plateType="@Model.FilterType"
+                                   asp-route-country="@Model.FilterCountry"
+                                   asp-route-window="@Model.FilterWindow"
+                                   asp-route-deviceId="@Model.FilterDeviceId"
+                                   asp-route-alertsOnly="@Model.FilterAlertsOnly"
+                                   asp-route-speedViolationsOnly="@Model.FilterSpeedViolationsOnly"
+                                   asp-route-investigationMode="@Model.IsInvestigationMode"
+                                   asp-route-view="@Model.CurrentView"
+                                   asp-route-page="@(Model.CurrentPage + 1)">Next</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    @if (!Model.IsInvestigationMode)
+    {
+        <aside class="search-insides-column investigation-section executive-sidebar" aria-label="Executive summary and charts">
+            <div class="card executive-summary-card investigation-summary-card">
+                <h4 class="section-title section-title--sidebar"><i class="fa-solid fa-file-shield"></i><span>Inside Summary</span></h4>
+                <article class="map-popup-card map-popup-card--transaction map-popup-card--inside-summary inside-summary-card inside-summary--sidebar" aria-label="Inside summary">
+                    <div class="inside-summary-accent" aria-hidden="true"></div>
+                    <div class="map-popup-body">
+                        <div class="map-popup-trans-head inside-summary-head">
+                            <div class="map-popup-trans-head-main">
+                                <div class="map-popup-veh-icon inside-summary-icon" aria-hidden="true">
+                                    <i class="fa-solid fa-file-shield"></i>
+                                </div>
+                                <div class="map-popup-trans-titles">
+                                    <div class="map-popup-title-row">
+                                        <h4 class="map-popup-plate-title inside-summary-title">Intelligence brief</h4>
+                                        <div class="map-popup-risk map-popup-risk--low">
+                                            <span class="map-popup-risk-dot" aria-hidden="true"></span>
+                                            <span class="map-popup-risk-text">Executive</span>
+                                        </div>
+                                    </div>
+                                    <p class="map-popup-trans-sub inside-summary-sub">
+                                        @Model.TotalResults.ToString("N0") result(s) · @filterWindowLabel · @queryContextLabel
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="map-popup-kpis inside-summary-kpis">
+                            <div class="map-popup-kpi">
+                                <span class="map-popup-kpi-label">Total reads</span>
+                                <span class="map-popup-kpi-value">@Model.TotalResults.ToString("N0")</span>
+                            </div>
+                            <div class="map-popup-kpi">
+                                <span class="map-popup-kpi-label">Distinct plates</span>
+                                <span class="map-popup-kpi-value">@Model.DistinctPlates.ToString("N0")</span>
+                            </div>
+                            <div class="map-popup-kpi">
+                                <span class="map-popup-kpi-label">Alerts</span>
+                                <span class="map-popup-kpi-value">@Model.AlertCount.ToString("N0")</span>
+                            </div>
+                        </div>
+                        <p class="inside-summary-narrative" id="insideSummaryNarrative">@Model.SummaryText</p>
+                        @if (Model.InsightBullets.Count > 0)
+                        {
+                            <div class="inside-summary-insights">
+                                <div class="inside-summary-insights-label">Highlights</div>
+                                <ul class="inside-summary-insight-list" id="insideSummaryInsightList">
+                                    @foreach (var insight in Model.InsightBullets)
+                                    {
+                                        <li>
+                                            <span class="inside-summary-insight-icon" aria-hidden="true"><i class="fa-solid fa-bolt"></i></span>
+                                            <span class="inside-summary-insight-text">@insight</span>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                    </div>
+                </article>
+                <div class="mt-3 d-flex gap-2 flex-wrap inside-summary-actions">
+                    <button class="btn btn-accent btn-sm" type="button"><i class="fa-solid fa-file-export me-2"></i>Generate Case File</button>
+                    <button id="ttsBtn" class="btn btn-ghost btn-sm" type="button"><i class="fa-solid fa-volume-high me-2"></i>Text-to-Speech</button>
+                </div>
+            </div>
+            <div class="executive-metrics-stack">
+                <div class="card executive-metric-card">
+                    <div class="stat-label">Plate Type</div>
+                    <div class="micro-chart">
+                        <canvas id="plateTypeChart"></canvas>
+                    </div>
+                    <div id="plateTypeChartDetails" class="chart-detail-list"></div>
+                </div>
+                <div class="card executive-metric-card">
+                    <div class="stat-label">Plate Country</div>
+                    <div class="micro-chart">
+                        <canvas id="plateCountryChart"></canvas>
+                    </div>
+                    <div id="plateCountryChartDetails" class="chart-detail-list"></div>
+                </div>
+                <div class="card executive-metric-card">
+                    <div class="stat-label">Vehicle Classification</div>
+                    <div class="micro-chart">
+                        <canvas id="vehicleClassChart"></canvas>
+                    </div>
+                    <div id="vehicleClassChartDetails" class="chart-detail-list"></div>
+                </div>
+            </div>
+        </aside>
+    }
+    @if (Model.IsInvestigationMode)
+    {
+        var coTravelIsDemo = Model.CoTravelPlates.Count == 0;
+        var coTravelDisplayList = coTravelIsDemo
+            ? new List<string>
+            {
+                "45231 S · 2 reads · ~4 min overlap",
+                "78102 K · adjacent corridor · Lusail",
+                "30988 M · parallel lane · West Bay"
+            }
+            : Model.CoTravelPlates;
+        var cidWantedActive = Model.WantedFlag.Contains("Wanted", StringComparison.OrdinalIgnoreCase);
+        <div class="search-insides-column investigation-section">
+            <div class="card investigation-summary-card">
+                <h4 class="section-title section-title--sidebar"><i class="fa-solid fa-file-shield"></i><span>Inside Summary</span></h4>
+                <article class="map-popup-card map-popup-card--transaction map-popup-card--inside-summary inside-summary-card inside-summary--sidebar" aria-label="Inside summary">
+                    <div class="inside-summary-accent" aria-hidden="true"></div>
+                    <div class="map-popup-body">
+                        <div class="map-popup-trans-head inside-summary-head">
+                            <div class="map-popup-trans-head-main">
+                                <div class="map-popup-veh-icon inside-summary-icon" aria-hidden="true">
+                                    <i class="fa-solid fa-file-shield"></i>
+                                </div>
+                                <div class="map-popup-trans-titles">
+                                    <div class="map-popup-title-row">
+                                        <h4 class="map-popup-plate-title inside-summary-title">Intelligence brief</h4>
+                                        <div class="map-popup-risk map-popup-risk--warn">
+                                            <span class="map-popup-risk-dot" aria-hidden="true"></span>
+                                            <span class="map-popup-risk-text">Investigation</span>
+                                        </div>
+                                    </div>
+                                    <p class="map-popup-trans-sub inside-summary-sub">
+                                        @Model.TotalResults.ToString("N0") result(s) · @filterWindowLabel · @queryContextLabel
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="map-popup-kpis inside-summary-kpis">
+                            <div class="map-popup-kpi">
+                                <span class="map-popup-kpi-label">Total reads</span>
+                                <span class="map-popup-kpi-value">@Model.TotalResults.ToString("N0")</span>
+                            </div>
+                            <div class="map-popup-kpi">
+                                <span class="map-popup-kpi-label">Distinct plates</span>
+                                <span class="map-popup-kpi-value">@Model.DistinctPlates.ToString("N0")</span>
+                            </div>
+                            <div class="map-popup-kpi">
+                                <span class="map-popup-kpi-label">Alerts</span>
+                                <span class="map-popup-kpi-value">@Model.AlertCount.ToString("N0")</span>
+                            </div>
+                        </div>
+                        <p class="inside-summary-narrative" id="insideSummaryNarrative">@Model.SummaryText</p>
+                        @if (Model.InsightBullets.Count > 0)
+                        {
+                            <div class="inside-summary-insights">
+                                <div class="inside-summary-insights-label">Highlights</div>
+                                <ul class="inside-summary-insight-list" id="insideSummaryInsightList">
+                                    @foreach (var insight in Model.InsightBullets)
+                                    {
+                                        <li>
+                                            <span class="inside-summary-insight-icon" aria-hidden="true"><i class="fa-solid fa-bolt"></i></span>
+                                            <span class="inside-summary-insight-text">@insight</span>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                    </div>
+                </article>
+            </div>
+            <div class="card investigation-intel-card investigation-intel-card--flush-map">
+                <div class="investigation-intel-accent investigation-intel-accent--live" aria-hidden="true"></div>
+                <div class="investigation-intel-head">
+                    <div class="investigation-intel-icon investigation-intel-icon--live" aria-hidden="true"><i class="fa-solid fa-location-crosshairs"></i></div>
+                    <div class="investigation-intel-head-text">
+                        <h4 class="investigation-intel-title">Live Tracking</h4>
+                        <p class="investigation-intel-sub">Simulated radius around last detection · <strong>@(Model.LatestPlate ?? "—")</strong></p>
+                    </div>
+                </div>
+                <div class="investigation-intel-map-wrap">
+                    <div class="map-shell map-shell--live-tracking mt-0"
+                         data-lat="@Model.LatestLat"
+                         data-lng="@Model.LatestLng"
+                         data-plate="@Model.LatestPlate">
+                        <div id="liveTrackingMap" class="map-canvas map-canvas--live-tracking"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="card investigation-intel-card">
+                <div class="investigation-intel-accent" aria-hidden="true"></div>
+                <div class="investigation-intel-head">
+                    <div class="investigation-intel-icon" aria-hidden="true"><i class="fa-solid fa-route"></i></div>
+                    <div class="investigation-intel-head-text">
+                        <h4 class="investigation-intel-title">Historical Tracking</h4>
+                        <p class="investigation-intel-sub">Ordered sightings · plate <strong>@(Model.SelectedPlate ?? "N/A")</strong></p>
+                    </div>
+                </div>
+                <div class="investigation-intel-body">
+                    @if (Model.Timeline.Count == 0)
+                    {
+                        <div class="investigation-intel-empty">
+                            <i class="fa-regular fa-map" aria-hidden="true"></i>
+                            <span>No timeline rows yet. Run a plate search and open results to populate this trail.</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <ul class="investigation-intel-timeline">
+                            @foreach (var entry in Model.Timeline)
+                            {
+                                <li class="investigation-intel-timeline-item">
+                                    <span class="investigation-intel-timeline-dot" aria-hidden="true"></span>
+                                    <span class="investigation-intel-timeline-text">@entry</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+            <div class="card investigation-intel-card">
+                <div class="investigation-intel-accent investigation-intel-accent--teal" aria-hidden="true"></div>
+                <div class="investigation-intel-head">
+                    <div class="investigation-intel-icon investigation-intel-icon--teal" aria-hidden="true"><i class="fa-solid fa-car-side"></i></div>
+                    <div class="investigation-intel-head-text">
+                        <h4 class="investigation-intel-title">Co-Travel Vehicles</h4>
+                        <p class="investigation-intel-sub">Same time window · proximity heuristic</p>
+                    </div>
+                </div>
+                <div class="investigation-intel-body">
+                    @if (coTravelIsDemo)
+                    {
+                        <div class="investigation-intel-demo-banner" role="note">
+                            <i class="fa-solid fa-flask" aria-hidden="true"></i>
+                            <span>Illustrative matches (no live co-travel feed for this query).</span>
+                        </div>
+                    }
+                    <ul class="investigation-intel-list">
+                        @foreach (var line in coTravelDisplayList)
+                        {
+                            <li class="investigation-intel-row">
+                                <span class="investigation-intel-row-icon" aria-hidden="true"><i class="fa-solid fa-link"></i></span>
+                                <span class="investigation-intel-row-text">@line</span>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+            <div class="card investigation-intel-card">
+                <div class="investigation-intel-accent investigation-intel-accent--warn" aria-hidden="true"></div>
+                <div class="investigation-intel-head">
+                    <div class="investigation-intel-icon investigation-intel-icon--warn" aria-hidden="true"><i class="fa-solid fa-user-shield"></i></div>
+                    <div class="investigation-intel-head-text">
+                        <h4 class="investigation-intel-title">CID / Wanted List</h4>
+                        <p class="investigation-intel-sub">Flag intelligence · risk estimate</p>
+                    </div>
+                </div>
+                <div class="investigation-intel-body">
+                    <div class="investigation-intel-metrics">
+                        <div class="investigation-intel-metric">
+                            <span class="investigation-intel-metric-label">Flag status</span>
+                            <span class="investigation-intel-metric-value @(cidWantedActive ? "investigation-intel-metric-value--danger" : "")">@Model.WantedFlag</span>
+                        </div>
+                        <div class="investigation-intel-metric">
+                            <span class="investigation-intel-metric-label">Risk score</span>
+                            <span class="investigation-intel-metric-value">@(Math.Min(Model.ViolationsCount * 12, 100))%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card investigation-intel-card">
+                <div class="investigation-intel-accent investigation-intel-accent--gold" aria-hidden="true"></div>
+                <div class="investigation-intel-head">
+                    <div class="investigation-intel-icon investigation-intel-icon--gold" aria-hidden="true"><i class="fa-solid fa-receipt"></i></div>
+                    <div class="investigation-intel-head-text">
+                        <h4 class="investigation-intel-title">Traffic Fines</h4>
+                        <p class="investigation-intel-sub">Linked violations · estimated liability</p>
+                    </div>
+                </div>
+                <div class="investigation-intel-body">
+                    <div class="investigation-intel-highlight">@Model.TrafficFines</div>
+                    <p class="investigation-intel-foot">Last ticket on file: <strong>2 days ago</strong> (demo ledger).</p>
+                </div>
+            </div>
+            <div class="card investigation-intel-card">
+                <div class="investigation-intel-accent investigation-intel-accent--purple" aria-hidden="true"></div>
+                <div class="investigation-intel-head">
+                    <div class="investigation-intel-icon investigation-intel-icon--purple" aria-hidden="true"><i class="fa-solid fa-id-card"></i></div>
+                    <div class="investigation-intel-head-text">
+                        <h4 class="investigation-intel-title">Owner Intelligence</h4>
+                        <p class="investigation-intel-sub">Registry snapshot · points balance</p>
+                    </div>
+                </div>
+                <div class="investigation-intel-body">
+                    <div class="investigation-intel-block">
+                        <span class="investigation-intel-block-label">Registered party</span>
+                        <p class="investigation-intel-block-value">@Model.OwnerInfo</p>
+                    </div>
+                    <div class="investigation-intel-block investigation-intel-block--compact">
+                        <span class="investigation-intel-block-label">License points</span>
+                        <p class="investigation-intel-block-value investigation-intel-block-value--mono">@Model.LicensePoints</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let searchMap;
+        let searchMarkers = [];
+        let searchInfoWindow;
+        let searchHeatmap = null;
+
+        const SEARCH_HEAT_GRADIENT = [
+            "rgba(8, 12, 22, 0)",
+            "rgba(8, 12, 22, 0)",
+            "rgba(45, 120, 180, 0.45)",
+            "rgba(86, 204, 242, 0.78)",
+            "rgba(86, 204, 242, 0.92)",
+            "rgba(242, 201, 76, 0.94)",
+            "rgba(242, 153, 74, 0.97)",
+            "rgba(235, 87, 87, 0.98)",
+            "rgba(192, 35, 35, 1)",
+            "rgba(153, 12, 12, 1)",
+            "rgba(90, 0, 0, 1)"
+        ];
+
+        function transactionHitTargetIcon() {
+            return {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 18,
+                fillOpacity: 0,
+                strokeOpacity: 0,
+                strokeWeight: 0
+            };
+        }
+
+        function buildSearchHeatmapWeightedData(groups) {
+            return groups.map((records) => ({
+                location: new google.maps.LatLng(records[0].lat, records[0].lng),
+                weight: records.length
+            }));
+        }
+        let trackingPath;
+        let currentSegmentPath;
+        let trackerMarker;
+        let trackingStartMarker;
+        let trackingEndMarker;
+        let trackingTimeBadgeMarkers = [];
+        let trackerTimer;
+        let trackerIndex = 0;
+        let trackingPoints = [];
+        let isTracking = false;
+        let liveTrackingMap;
+        let liveTrackingCircle;
+        let liveTrackingMarker;
+        let liveTrackingRadiusTimer;
+        let trackingToggleControl;
+        const searchAllowsPlateTracking = @(Model.IsPlateQuery ? "true" : "false");
+        /** Intermediate "Record Time" badges on the journey path show only when zoom is strictly greater than this. */
+        const SEARCH_RECORD_TIME_MIN_ZOOM = 14;
+        let mapPopupAnchorMarker = null;
+
+        function syncTrackingTimeBadgeVisibility() {
+            if (!searchMap || !trackingTimeBadgeMarkers.length) {
+                return;
+            }
+            const z = searchMap.getZoom();
+            const show = typeof z === "number" && z > SEARCH_RECORD_TIME_MIN_ZOOM;
+            const targetMap = show ? searchMap : null;
+            trackingTimeBadgeMarkers.forEach((marker) => {
+                marker.setMap(targetMap);
+            });
+        }
+
+        function mapPopupPositionKey(lat, lng) {
+            return `${Number(lat).toFixed(5)}_${Number(lng).toFixed(5)}`;
+        }
+
+        function groupMarkersByPosition(allMarkers) {
+            const bucket = new Map();
+            allMarkers.forEach((d) => {
+                if (!Number.isFinite(d.lat) || !Number.isFinite(d.lng)) {
+                    return;
+                }
+                const k = mapPopupPositionKey(d.lat, d.lng);
+                if (!bucket.has(k)) {
+                    bucket.set(k, []);
+                }
+                bucket.get(k).push(d);
+            });
+            const groups = [];
+            bucket.forEach((records) => {
+                records.sort((a, b) => new Date(b.time) - new Date(a.time));
+                groups.push(records);
+            });
+            return groups;
+        }
+
+        function openSearchMarkerPopup(marker) {
+            const records = marker.__popupRecords;
+            if (!records || records.length === 0) {
+                return;
+            }
+            let idx = marker.__popupIndex ?? 0;
+            idx = Math.max(0, Math.min(idx, records.length - 1));
+            marker.__popupIndex = idx;
+            mapPopupAnchorMarker = marker;
+            searchInfoWindow.setContent(buildMapPopupCard(records[idx], idx, records.length));
+            searchInfoWindow.open(searchMap, marker);
+        }
+
+        function initSearchMap() {
+            const dohaCenter = { lat: 25.2867, lng: 51.5333 };
+            searchMap = new google.maps.Map(document.getElementById("searchMap"), {
+                center: dohaCenter,
+                zoom: 15,
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                streetViewControl: false,
+                mapTypeControl: true,
+                mapTypeControlOptions: {
+                    style: google.maps.MapTypeControlStyle.DEFAULT,
+                    position: google.maps.ControlPosition.LEFT_TOP,
+                    mapTypeIds: [
+                        google.maps.MapTypeId.ROADMAP,
+                        google.maps.MapTypeId.SATELLITE
+                    ]
+                },
+                zoomControl: true,
+                zoomControlOptions: {
+                    position: google.maps.ControlPosition.RIGHT_CENTER
+                },
+                fullscreenControl: true,
+                fullscreenControlOptions: {
+                    position: google.maps.ControlPosition.RIGHT_TOP
+                },
+                controlSize: 40,
+                styles: [
+                    { elementType: "geometry", stylers: [{ color: "#0b1424" }] },
+                    { elementType: "labels.text.stroke", stylers: [{ color: "#0b1424" }] },
+                    { elementType: "labels.text.fill", stylers: [{ color: "#8fa1bd" }] },
+                    { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#223149" }] },
+                    { featureType: "administrative", elementType: "labels.text.fill", stylers: [{ visibility: "off" }] },
+                    { featureType: "poi", elementType: "geometry", stylers: [{ color: "#101c30" }] },
+                    { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+                    { featureType: "road", elementType: "geometry", stylers: [{ color: "#1a2536" }] },
+                    { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#283349" }] },
+                    { featureType: "transit", elementType: "geometry", stylers: [{ color: "#162233" }] },
+                    { featureType: "transit", elementType: "labels", stylers: [{ visibility: "off" }] },
+                    { featureType: "water", elementType: "geometry", stylers: [{ color: "#0a1f33" }] },
+                    { featureType: "water", elementType: "labels.text.fill", stylers: [{ visibility: "off" }] },
+                    { featureType: "road", elementType: "labels.text.fill", stylers: [{ visibility: "on" }] },
+                    { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+                    { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ visibility: "on" }] }
+                ]
+            });
+
+            initTrackingControl();
+            searchInfoWindow = new google.maps.InfoWindow({ maxWidth: 400 });
+            google.maps.event.addListener(searchInfoWindow, "domready", bindPopupInteractions);
+            searchMap.addListener("zoom_changed", () => {
+                searchInfoWindow?.close();
+                syncTrackingTimeBadgeVisibility();
+            });
+            loadSearchMarkers();
+            initLiveTrackingMap(dohaCenter);
+
+            document.querySelectorAll(".view-on-map-btn").forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    const lat = parseFloat(btn.getAttribute("data-lat"));
+                    const lng = parseFloat(btn.getAttribute("data-lng"));
+                    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                        focusSearchMarker(lat, lng, btn.getAttribute("data-plate") || "Plate");
+                    }
+                });
+            });
+
+            document.querySelectorAll(".live-track-btn").forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    const lat = parseFloat(btn.getAttribute("data-lat"));
+                    const lng = parseFloat(btn.getAttribute("data-lng"));
+                    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                        updateLiveTracking(lat, lng);
+                    }
+                });
+            });
+        }
+
+        function loadSearchMarkers() {
+            trackingPoints = [];
+            fetchAllSearchMarkers().then((allMarkers) => {
+                if (searchHeatmap) {
+                    searchHeatmap.setMap(null);
+                    searchHeatmap = null;
+                }
+                searchMarkers.forEach((m) => m.setMap(null));
+                searchMarkers = [];
+
+                allMarkers.forEach((markerData) => {
+                    if (searchAllowsPlateTracking && markerData.time) {
+                        trackingPoints.push({
+                            lat: markerData.lat,
+                            lng: markerData.lng,
+                            time: new Date(markerData.time)
+                        });
+                    }
+                });
+
+                const groups = groupMarkersByPosition(allMarkers);
+                groups.forEach((records) => addSearchMarkerGroup(records));
+
+                if (searchMarkers.length > 0) {
+                    const first = searchMarkers[0].getPosition();
+                    updateLiveTracking(first.lat(), first.lng());
+                }
+
+                const viz = google.maps.visualization;
+                if (viz && groups.length > 0) {
+                    const maxWeight = Math.max(...groups.map((g) => g.length), 1);
+                    searchHeatmap = new viz.HeatmapLayer({
+                        data: buildSearchHeatmapWeightedData(groups),
+                        map: searchMap,
+                        dissipating: true,
+                        radius: 46,
+                        opacity: 0.92,
+                        maxIntensity: Math.max(maxWeight * 0.88, 1),
+                        gradient: SEARCH_HEAT_GRADIENT
+                    });
+                }
+            });
+
+            document.querySelectorAll(".view-on-map-btn").forEach((btn) => {
+                const lat = parseFloat(btn.getAttribute("data-lat"));
+                const lng = parseFloat(btn.getAttribute("data-lng"));
+                if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+                    return;
+                }
+                btn.addEventListener("click", () => {
+                    focusSearchMarker(lat, lng, btn.getAttribute("data-plate") || "Plate");
+                });
+            });
+        }
+
+        function focusSearchMarker(lat, lng, plate) {
+            setResultView("map");
+            searchMap.panTo({ lat, lng });
+            searchMap.setZoom(15);
+            const marker = searchMarkers.find(m =>
+                Math.abs(m.getPosition().lat() - lat) < 0.0001 &&
+                Math.abs(m.getPosition().lng() - lng) < 0.0001
+            );
+            if (marker) {
+                const records = marker.__popupRecords || [];
+                const want = (plate || "").trim().toLowerCase();
+                let idx = 0;
+                if (want) {
+                    const found = records.findIndex((r) => {
+                        const p = (r.plate || "").toLowerCase();
+                        return p === want || p.includes(want) || want.includes(p);
+                    });
+                    if (found >= 0) {
+                        idx = found;
+                    }
+                }
+                marker.__popupIndex = idx;
+                openSearchMarkerPopup(marker);
+            }
+        }
+
+        async function fetchAllSearchMarkers() {
+            const response = await fetch("@Url.Action("MapMarkers", "Search")?q=@Model.Query&plateType=@Model.FilterType&country=@Model.FilterCountry&window=@Model.FilterWindow&deviceId=@Model.FilterDeviceId&alertsOnly=@Model.FilterAlertsOnly&speedViolationsOnly=@Model.FilterSpeedViolationsOnly");
+            if (!response.ok) {
+                return [];
+            }
+            return await response.json();
+        }
+
+        function addSearchMarkerGroup(records) {
+            if (!records || records.length === 0) {
+                return;
+            }
+            const anchor = records[0];
+            const title = records.length > 1
+                ? `${records.length} detections at this location`
+                : (anchor.plate || "Plate");
+            const marker = new google.maps.Marker({
+                position: { lat: anchor.lat, lng: anchor.lng },
+                map: searchMap,
+                title,
+                icon: transactionHitTargetIcon(),
+                optimized: false,
+                zIndex: 1000000
+            });
+            marker.__popupRecords = records;
+            marker.__popupIndex = 0;
+            marker.addListener("click", () => {
+                marker.__popupIndex = 0;
+                openSearchMarkerPopup(marker);
+            });
+            searchMarkers.push(marker);
+        }
+
+        function isInvestigationSearchOn() {
+            const toggle = document.getElementById("investigationModeToggle");
+            if (toggle) {
+                return toggle.checked;
+            }
+            return @(Model.IsInvestigationMode ? "true" : "false");
+        }
+
+        function buildMapPopupCard(data, recordIndex = 0, recordTotal = 1) {
+            const plate = escapeHtml(data.plate || "Plate");
+            const device = escapeHtml(data.device || "Device");
+            const captured = data.time
+                ? new Date(data.time).toLocaleString(undefined, {
+                    month: "numeric",
+                    day: "numeric",
+                    year: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                    second: "2-digit",
+                    hour12: true
+                })
+                : "Unknown";
+            const capturedShort = data.time
+                ? new Date(data.time).toLocaleString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true
+                })
+                : "—";
+            const vehicle = escapeHtml(data.vehicle || "—");
+            const plateType = escapeHtml(data.plateType || "—");
+            const country = escapeHtml(data.country || "—");
+            const status = escapeHtml(`${data.status ?? "—"}`);
+            const isAlert = !!data.alert;
+            const speed = Number.isFinite(data.speed) ? `${data.speed} km/h` : "—";
+            const riskClass = isAlert ? "map-popup-risk--high" : "map-popup-risk--low";
+            const riskLabel = isAlert ? "High risk" : "Standard";
+            const flagCount = isAlert ? "1" : "0";
+            const subtitle = `${plateType} · ${vehicle}`;
+            const liveTrackingButtonHtml = isInvestigationSearchOn()
+                ? "<button class=\"map-popup-foot-btn map-popup-foot-btn--accent popup-live-track-btn\" type=\"button\">Live tracking</button>"
+                : "";
+            const showNav = recordTotal > 1;
+            const navHtml = showNav
+                ? `<div class="map-popup-nav">
+                        <button type="button" class="map-popup-nav-btn map-popup-nav-prev">Previous</button>
+                        <span class="map-popup-nav-index">${recordIndex + 1} / ${recordTotal}</span>
+                        <button type="button" class="map-popup-nav-btn map-popup-nav-next">Next</button>
+                   </div>`
+                : "";
+            const tagRisk = isAlert
+                ? "<span class=\"map-popup-pill map-popup-pill--danger\">Alert detection</span>"
+                : "";
+            const speedNum = Number.isFinite(data.speed) ? data.speed : 0;
+            let tagSecond = "";
+            if (speedNum >= 120) {
+                tagSecond = "<span class=\"map-popup-pill map-popup-pill--warn\">High speed</span>";
+            } else if (!isAlert) {
+                tagSecond = "<span class=\"map-popup-pill map-popup-pill--neutral\">ANPR read</span>";
+            }
+
+            return `
+                <div class="map-popup-card map-popup-card--transaction" data-lat="${data.lat}" data-lng="${data.lng}">
+                    <div class="map-popup-media">
+                        <img class="map-popup-image" src="/images/anpr/Anpr1.jpg" alt="Transaction frame" />
+                        <div class="map-popup-plate-crop">
+                            <div class="map-popup-plate-text">${plate}</div>
+                        </div>
+                    </div>
+                    <div class="map-popup-body">
+                        ${navHtml}
+                        <div class="map-popup-trans-head">
+                            <div class="map-popup-trans-head-main">
+                                <div class="map-popup-veh-icon" aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
+                                        <circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>
+                                    </svg>
+                                </div>
+                                <div class="map-popup-trans-titles">
+                                    <div class="map-popup-title-row">
+                                        <h4 class="map-popup-plate-title">${plate}</h4>
+                                        <div class="map-popup-risk ${riskClass}">
+                                            <span class="map-popup-risk-dot" aria-hidden="true"></span>
+                                            <span class="map-popup-risk-text">${riskLabel}</span>
+                                        </div>
+                                    </div>
+                                    <p class="map-popup-trans-sub">${subtitle}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="map-popup-kpis">
+                            <div class="map-popup-kpi">
+                                <span class="map-popup-kpi-label">Class</span>
+                                <span class="map-popup-kpi-value">${vehicle}</span>
+                            </div>
+                            <div class="map-popup-kpi">
+                                <span class="map-popup-kpi-label">Origin</span>
+                                <span class="map-popup-kpi-value">${country}</span>
+                            </div>
+                            <div class="map-popup-kpi">
+                                <span class="map-popup-kpi-label">Flags</span>
+                                <span class="map-popup-kpi-value">${flagCount}</span>
+                            </div>
+                        </div>
+                        <div class="map-popup-pill-row">${tagRisk}${tagSecond}</div>
+                        <div class="map-popup-trans-meta-row">
+                            <span class="map-popup-meta-item"><i class="fa-solid fa-location-dot" aria-hidden="true"></i>${device}</span>
+                            <span class="map-popup-meta-item"><i class="fa-regular fa-clock" aria-hidden="true"></i>${capturedShort}</span>
+                        </div>
+                        <p class="map-popup-trans-detail">Captured ${captured} · Speed ${speed} · Status ${status}</p>
+                        <div class="map-popup-trans-actions">
+                            <button type="button" class="map-popup-foot-btn popup-center-map-btn">View on map</button>
+                            <a class="map-popup-foot-btn map-popup-foot-btn--ghost" href="@(Url.Action("Index", "Cases"))">Add to case</a>
+                            ${liveTrackingButtonHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll("\"", "&quot;")
+                .replaceAll("'", "&#39;");
+        }
+
+        function bindPopupInteractions() {
+            const popup = document.querySelector(".map-popup-card");
+            if (!popup) {
+                return;
+            }
+
+            const prevBtn = popup.querySelector(".map-popup-nav-prev");
+            const nextBtn = popup.querySelector(".map-popup-nav-next");
+            if (prevBtn && nextBtn && mapPopupAnchorMarker && mapPopupAnchorMarker.__popupRecords?.length > 1) {
+                prevBtn.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const m = mapPopupAnchorMarker;
+                    const n = m.__popupRecords.length;
+                    m.__popupIndex = ((m.__popupIndex ?? 0) + n - 1) % n;
+                    openSearchMarkerPopup(m);
+                });
+                nextBtn.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const m = mapPopupAnchorMarker;
+                    const n = m.__popupRecords.length;
+                    m.__popupIndex = ((m.__popupIndex ?? 0) + 1) % n;
+                    openSearchMarkerPopup(m);
+                });
+            }
+
+            const liveTrackingBtn = popup.querySelector(".popup-live-track-btn");
+            if (liveTrackingBtn) {
+                liveTrackingBtn.addEventListener("click", () => {
+                    const lat = Number.parseFloat(popup.getAttribute("data-lat") || "");
+                    const lng = Number.parseFloat(popup.getAttribute("data-lng") || "");
+                    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                        updateLiveTracking(lat, lng);
+                    }
+                });
+            }
+
+            const centerMapBtn = popup.querySelector(".popup-center-map-btn");
+            if (centerMapBtn && searchMap) {
+                centerMapBtn.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const lat = Number.parseFloat(popup.getAttribute("data-lat") || "");
+                    const lng = Number.parseFloat(popup.getAttribute("data-lng") || "");
+                    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                        searchMap.panTo({ lat, lng });
+                        const z = searchMap.getZoom();
+                        if (!Number.isFinite(z) || z < 15) {
+                            searchMap.setZoom(15);
+                        }
+                    }
+                });
+            }
+
+            popup.addEventListener("wheel", (event) => {
+                if (!event.ctrlKey || !searchMap) {
+                    return;
+                }
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                const currentZoom = searchMap.getZoom() || 10;
+                const delta = event.deltaY < 0 ? 1 : -1;
+                searchMap.setZoom(Math.max(3, Math.min(22, currentZoom + delta)));
+            }, { passive: false });
+        }
+
+        function buildTrackingPath(points) {
+            if (!points || points.length < 2) {
+                return;
+            }
+
+            const sorted = points
+                .filter(p => p.time instanceof Date && !isNaN(p.time.valueOf()))
+                .sort((a, b) => a.time - b.time);
+
+            if (sorted.length < 2) {
+                return;
+            }
+
+            const path = sorted.map(p => ({
+                lat: p.lat,
+                lng: p.lng,
+                time: p.time
+            }));
+            if (trackingPath) {
+                trackingPath.setMap(null);
+            }
+
+            trackingPath = new google.maps.Polyline({
+                path: [path[0]],
+                geodesic: true,
+                strokeColor: "#f2c94c",
+                strokeOpacity: 0.85,
+                strokeWeight: 3
+            });
+            trackingPath.setMap(searchMap);
+
+            currentSegmentPath = new google.maps.Polyline({
+                path: [path[0]],
+                geodesic: true,
+                strokeColor: "#eb5757",
+                strokeOpacity: 0.95,
+                strokeWeight: 4
+            });
+            currentSegmentPath.setMap(searchMap);
+
+            if (trackingStartMarker) {
+                trackingStartMarker.setMap(null);
+            }
+
+            if (trackingEndMarker) {
+                trackingEndMarker.setMap(null);
+            }
+
+            trackingStartMarker = new google.maps.Marker({
+                map: searchMap,
+                position: path[0],
+                title: "Journey Start",
+                icon: getJourneyPointIcon("#eb5757", "#ffffff", formatTrackingTime(path[0].time), "Start"),
+                zIndex: 3000
+            });
+
+            trackingEndMarker = new google.maps.Marker({
+                map: searchMap,
+                position: path[path.length - 1],
+                title: "Journey End",
+                icon: getJourneyPointIcon("#27ae60", "#ffffff", formatTrackingTime(path[path.length - 1].time), "End"),
+                zIndex: 3000
+            });
+
+            trackingTimeBadgeMarkers.forEach(marker => marker.setMap(null));
+            trackingTimeBadgeMarkers = path
+                .slice(1, -1)
+                .map((point, index) => new google.maps.Marker({
+                    map: null,
+                    position: point,
+                    title: `Record Time ${index + 1}`,
+                    icon: getRecordTimeBadgeIcon(formatTrackingTime(point.time)),
+                    zIndex: 2500
+                }));
+
+            const bounds = new google.maps.LatLngBounds();
+            path.forEach(p => bounds.extend(p));
+            searchMap.fitBounds(bounds);
+
+            syncTrackingTimeBadgeVisibility();
+            google.maps.event.addListenerOnce(searchMap, "idle", syncTrackingTimeBadgeVisibility);
+
+            startTrackerAnimation(path);
+        }
+
+        function startTrackerAnimation(path) {
+            if (!path || path.length < 2) {
+                return;
+            }
+            trackerIndex = 0;
+            if (!trackerMarker) {
+                trackerMarker = new google.maps.Marker({
+                    map: searchMap,
+                    position: path[0],
+                    icon: getVehicleIcon(0),
+                    zIndex: 1500
+                });
+            } else {
+                trackerMarker.setPosition(path[0]);
+                trackerMarker.setIcon(getVehicleIcon(0));
+                trackerMarker.setMap(searchMap);
+                trackerMarker.setZIndex(1500);
+            }
+
+            cancelAnimationFrame(trackerTimer);
+            animateTrackingSegment(path, 1);
+        }
+
+        function animateTrackingSegment(path, segmentIndex) {
+            if (!isTracking) {
+                return;
+            }
+
+            if (segmentIndex >= path.length) {
+                if (currentSegmentDurationMarker) {
+                    currentSegmentDurationMarker.setMap(null);
+                    currentSegmentDurationMarker = null;
+                }
+                stopTracking();
+                return;
+            }
+
+            const start = path[segmentIndex - 1];
+            const end = path[segmentIndex];
+            const segmentDurationMs = 1000;
+            const segmentStartTime = performance.now();
+
+            const drawFrame = (now) => {
+                if (!isTracking) {
+                    return;
+                }
+
+                const progress = Math.min((now - segmentStartTime) / segmentDurationMs, 1);
+                const interpolated = interpolatePoint(start, end, progress);
+
+                trackerMarker.setPosition(interpolated);
+                trackerMarker.setIcon(getVehicleIcon(segmentIndex));
+
+                const completedPath = path
+                    .slice(0, segmentIndex)
+                    .map(point => new google.maps.LatLng(point.lat, point.lng));
+                completedPath.push(new google.maps.LatLng(interpolated.lat, interpolated.lng));
+                trackingPath.setPath(completedPath);
+
+                currentSegmentPath.setPath([
+                    new google.maps.LatLng(start.lat, start.lng),
+                    new google.maps.LatLng(interpolated.lat, interpolated.lng)
+                ]);
+
+                if (progress < 1) {
+                    trackerTimer = requestAnimationFrame(drawFrame);
+                    return;
+                }
+
+                trackerIndex = segmentIndex;
+                animateTrackingSegment(path, segmentIndex + 1);
+            };
+
+            trackerTimer = requestAnimationFrame(drawFrame);
+        }
+
+        function getVehicleIcon(index) {
+            const svg = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" viewBox="0 0 42 42">
+                    <defs>
+                        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur stdDeviation="2" result="blur"/>
+                            <feMerge>
+                                <feMergeNode in="blur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                    <path d="M8 25l3-8 5-6h10l5 6 3 8v6h-3a3 3 0 0 1-6 0H17a3 3 0 0 1-6 0H8z"
+                          fill="#f2c94c" stroke="#ffffff" stroke-width="1.5" filter="url(#glow)"/>
+                    <rect x="15" y="14" width="12" height="6" rx="2" fill="#1a2a3d"/>
+                    <circle cx="14" cy="30" r="2.4" fill="#0b1424"/>
+                    <circle cx="28" cy="30" r="2.4" fill="#0b1424"/>
+                    <circle cx="12" cy="22" r="2" fill="#56ccf2"/>
+                    <circle cx="30" cy="22" r="2" fill="#56ccf2"/>
+                </svg>`;
+
+            return {
+                url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
+                scaledSize: new google.maps.Size(42, 42),
+                anchor: new google.maps.Point(21, 21)
+            };
+        }
+
+        function getJourneyPointIcon(fillColor, strokeColor, timeLabel, caption) {
+            const svg = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="120" height="84" viewBox="0 0 120 84" fill="none">
+                    <defs>
+                        <filter id="journeyGlow" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur stdDeviation="2" result="blur"/>
+                            <feMerge>
+                                <feMergeNode in="blur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                    <rect x="10" y="4" width="100" height="28" rx="10" fill="rgba(11,20,36,0.92)" stroke="${strokeColor}" stroke-width="1.4"/>
+                    <text x="60" y="16" text-anchor="middle" fill="#8fa1bd" font-size="10" font-family="Arial, sans-serif">${caption}</text>
+                    <text x="60" y="26" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700" font-family="Arial, sans-serif">${timeLabel}</text>
+                    <path d="M60 38C53.373 38 48 43.373 48 50c0 9.199 12 25 12 25s12-15.801 12-25C72 43.373 66.627 38 60 38z"
+                          fill="${fillColor}" stroke="${strokeColor}" stroke-width="2" filter="url(#journeyGlow)"/>
+                    <circle cx="60" cy="50" r="4.5" fill="#0b1424" stroke="${strokeColor}" stroke-width="1.2"/>
+                </svg>`;
+
+            return {
+                url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
+                scaledSize: new google.maps.Size(120, 84),
+                anchor: new google.maps.Point(60, 76)
+            };
+        }
+
+        function getRecordTimeBadgeIcon(timeLabel) {
+            const svg = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="130" height="44" viewBox="0 0 130 44" fill="none">
+                    <rect x="3" y="3" width="124" height="38" rx="12" fill="rgba(11,20,36,0.94)" stroke="#56ccf2" stroke-width="1.6"/>
+                    <text x="65" y="17" text-anchor="middle" fill="#8fa1bd" font-size="10" font-family="Arial, sans-serif">Record Time</text>
+                    <text x="65" y="29" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700" font-family="Arial, sans-serif">${timeLabel}</text>
+                </svg>`;
+
+            return {
+                url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
+                scaledSize: new google.maps.Size(130, 44),
+                anchor: new google.maps.Point(65, 22)
+            };
+        }
+
+        function formatTrackingTime(value) {
+            if (!(value instanceof Date) || Number.isNaN(value.valueOf())) {
+                return "--:--";
+            }
+
+            return value.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+        }
+
+        function interpolatePoint(start, end, progress) {
+            return {
+                lat: start.lat + ((end.lat - start.lat) * progress),
+                lng: start.lng + ((end.lng - start.lng) * progress)
+            };
+        }
+
+        function initTrackingControl() {
+            if (!searchMap || !window.google?.maps?.ControlPosition) {
+                return;
+            }
+            if (!searchAllowsPlateTracking) {
+                return;
+            }
+
+            const wrapper = document.createElement("div");
+            wrapper.className = "map-control-widget";
+
+            const toggleButton = document.createElement("button");
+            toggleButton.id = "trackingToggleBtn";
+            toggleButton.type = "button";
+            toggleButton.className = "btn btn-ghost map-widget-btn";
+            toggleButton.textContent = isTracking ? "Stop Tracking" : "Start Tracking";
+            toggleButton.addEventListener("click", () => {
+                if (isTracking) {
+                    stopTracking();
+                } else {
+                    startTracking();
+                }
+            });
+
+            const clearButton = document.createElement("button");
+            clearButton.id = "trackingClearBtn";
+            clearButton.type = "button";
+            clearButton.className = "btn btn-ghost map-widget-btn";
+            clearButton.textContent = "Clear Tracking";
+            clearButton.addEventListener("click", () => {
+                clearTrackingOverlay();
+            });
+
+            wrapper.appendChild(toggleButton);
+            wrapper.appendChild(clearButton);
+            searchMap.controls[google.maps.ControlPosition.TOP_RIGHT].push(wrapper);
+            trackingToggleControl = toggleButton;
+        }
+
+        function setTrackingToggleLabel() {
+            const btn = trackingToggleControl || document.getElementById("trackingToggleBtn");
+            if (btn) {
+                btn.textContent = isTracking ? "Stop Tracking" : "Start Tracking";
+            }
+        }
+
+        function startTracking() {
+            if (!searchAllowsPlateTracking) {
+                return;
+            }
+            if (isTracking) {
+                return;
+            }
+            clearTrackingOverlay(false);
+            isTracking = true;
+            setTrackingToggleLabel();
+            buildTrackingPath(trackingPoints);
+        }
+
+        function stopTracking() {
+            isTracking = false;
+            cancelAnimationFrame(trackerTimer);
+            setTrackingToggleLabel();
+        }
+
+        function clearTrackingOverlay(resetToggle = true) {
+            isTracking = false;
+            cancelAnimationFrame(trackerTimer);
+            if (trackingPath) {
+                trackingPath.setMap(null);
+                trackingPath = null;
+            }
+            if (currentSegmentPath) {
+                currentSegmentPath.setMap(null);
+                currentSegmentPath = null;
+            }
+            if (trackerMarker) {
+                trackerMarker.setMap(null);
+                trackerMarker = null;
+            }
+            if (trackingStartMarker) {
+                trackingStartMarker.setMap(null);
+                trackingStartMarker = null;
+            }
+            if (trackingEndMarker) {
+                trackingEndMarker.setMap(null);
+                trackingEndMarker = null;
+            }
+            trackingTimeBadgeMarkers.forEach(marker => marker.setMap(null));
+            trackingTimeBadgeMarkers = [];
+            trackerIndex = 0;
+            if (resetToggle) {
+                setTrackingToggleLabel();
+            }
+        }
+
+        function initLiveTrackingMap(center) {
+            liveTrackingMap = new google.maps.Map(document.getElementById("liveTrackingMap"), {
+                center,
+                zoom: 15,
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                disableDefaultUI: true,
+                styles: [
+                    { elementType: "geometry", stylers: [{ color: "#0b1424" }] },
+                    { elementType: "labels.text.stroke", stylers: [{ color: "#0b1424" }] },
+                    { elementType: "labels.text.fill", stylers: [{ color: "#8fa1bd" }] },
+                    { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+                    { featureType: "road", elementType: "geometry", stylers: [{ color: "#1a2536" }] },
+                    { featureType: "water", elementType: "geometry", stylers: [{ color: "#0a1f33" }] },
+                    { featureType: "water", elementType: "labels.text.fill", stylers: [{ visibility: "off" }] },
+                    { featureType: "road", elementType: "labels.text.fill", stylers: [{ visibility: "on" }] },
+                    { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+                    { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ visibility: "on" }] }
+                ]
+            });
+
+            const shell = document.querySelector("#liveTrackingMap")?.closest(".map-shell");
+            const latAttr = shell?.getAttribute("data-lat");
+            const lngAttr = shell?.getAttribute("data-lng");
+            const lat = latAttr ? parseFloat(latAttr) : NaN;
+            const lng = lngAttr ? parseFloat(lngAttr) : NaN;
+            if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                updateLiveTracking(lat, lng);
+            }
+        }
+
+        function setResultView(view) {
+            const tabButtons = document.querySelectorAll(".tab-btn");
+            const mapView = document.getElementById("mapView");
+            const cardView = document.getElementById("cardView");
+            const listView = document.getElementById("listView");
+            const currentViewInput = document.getElementById("currentViewInput");
+
+            tabButtons.forEach((btn) => {
+                btn.classList.toggle("active", btn.getAttribute("data-view") === view);
+            });
+
+            mapView?.classList.toggle("active", view === "map");
+            cardView?.classList.toggle("active", view === "card");
+            listView?.classList.toggle("active", view === "list");
+
+            if (currentViewInput) {
+                currentViewInput.value = view;
+            }
+
+            document.querySelectorAll(".pagination-link").forEach((link) => {
+                try {
+                    const url = new URL(link.href, window.location.origin);
+                    url.searchParams.set("view", view);
+                    link.href = url.toString();
+                } catch {
+                }
+            });
+        }
+
+        function updateLiveTracking(lat, lng) {
+            if (!liveTrackingMap) {
+                return;
+            }
+
+            const center = { lat, lng };
+            liveTrackingMap.setCenter(center);
+            if (liveTrackingCircle) {
+                liveTrackingCircle.setMap(null);
+            }
+            liveTrackingCircle = new google.maps.Circle({
+                strokeColor: "#56ccf2",
+                strokeOpacity: 0.42,
+                strokeWeight: 1,
+                fillColor: "#56ccf2",
+                fillOpacity: 0.1,
+                map: liveTrackingMap,
+                center,
+                radius: 800
+            });
+
+            if (!liveTrackingMarker) {
+                liveTrackingMarker = new google.maps.Marker({
+                    position: center,
+                    map: liveTrackingMap,
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        fillColor: "#eb5757",
+                        fillOpacity: 1,
+                        strokeColor: "#ffffff",
+                        strokeOpacity: 0.9,
+                        strokeWeight: 1.5,
+                        scale: 6
+                    }
+                });
+            } else {
+                liveTrackingMarker.setPosition(center);
+            }
+
+            pulseLiveMarker();
+            animateLiveRadius();
+        }
+
+        function pulseLiveMarker() {
+            if (!liveTrackingMarker) {
+                return;
+            }
+
+            let grow = true;
+            let scale = 6;
+            const base = 6;
+            const max = 10;
+            clearInterval(liveTrackingMarker._pulseTimer);
+            liveTrackingMarker._pulseTimer = setInterval(() => {
+                scale = grow ? scale + 0.5 : scale - 0.5;
+                if (scale >= max) {
+                    grow = false;
+                }
+                if (scale <= base) {
+                    grow = true;
+                }
+                const icon = liveTrackingMarker.getIcon();
+                liveTrackingMarker.setIcon({ ...icon, scale });
+            }, 120);
+        }
+
+        function animateLiveRadius() {
+            if (!liveTrackingCircle) {
+                return;
+            }
+
+            clearInterval(liveTrackingRadiusTimer);
+            let radius = 800;
+            const maxRadius = 1800;
+            liveTrackingRadiusTimer = setInterval(() => {
+                radius += 80;
+                if (radius > maxRadius) {
+                    radius = 800;
+                }
+                liveTrackingCircle.setRadius(radius);
+            }, 900);
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            setTrackingToggleLabel();
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const tabButtons = document.querySelectorAll(".tab-btn");
+            const cardView = document.getElementById("cardView");
+            const listView = document.getElementById("listView");
+            const currentViewInput = document.getElementById("currentViewInput");
+            const updatePaginationViewLinks = (view) => {
+                document.querySelectorAll(".pagination-link").forEach((link) => {
+                    try {
+                        const url = new URL(link.href, window.location.origin);
+                        url.searchParams.set("view", view);
+                        link.href = url.toString();
+                    } catch {
+                    }
+                });
+            };
+
+            if (currentViewInput) {
+                updatePaginationViewLinks(currentViewInput.value || "map");
+            }
+
+            tabButtons.forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    const selectedView = btn.getAttribute("data-view") || "map";
+                    setResultView(selectedView);
+                });
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const micBtn = document.getElementById("searchMicBtn");
+            const input = document.getElementById("searchInput");
+            const plateTypeRawInput = document.getElementById("plateTypeRawInput");
+            if (!micBtn || !input) {
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                micBtn.title = "Voice search not supported in this browser.";
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = "en-US";
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            let isListening = false;
+            let isProcessing = false;
+            let lastInputSource = "manual";
+            const form = input.form;
+
+            recognition.addEventListener("start", () => {
+                isListening = true;
+                isProcessing = false;
+                micBtn.classList.add("btn-accent");
+                const hasText = (input.value || "").trim().length > 0;
+                if (hasText) {
+                    const typeSelect = document.getElementById("plateTypeSelect");
+                    const countrySelect = document.getElementById("countrySelect");
+                    const windowSelect = document.getElementById("windowSelect");
+                    const deviceInput = document.getElementById("deviceIdInput");
+                    if (plateTypeRawInput) {
+                        plateTypeRawInput.value = "";
+                    }
+                    if (typeSelect) typeSelect.value = "All";
+                    if (countrySelect) countrySelect.value = "All";
+                    if (windowSelect) windowSelect.value = "24h";
+                    if (deviceInput) deviceInput.value = "";
+                }
+                const status = document.getElementById("voiceStatus");
+                if (status) {
+                    status.textContent = "Listening...";
+                }
+            });
+
+            micBtn.addEventListener("click", () => {
+                recognition.start();
+            });
+
+            recognition.addEventListener("result", (event) => {
+                const transcript = event.results[0][0].transcript;
+                isProcessing = true;
+                lastInputSource = "mic";
+                const status = document.getElementById("voiceStatus");
+                if (status) {
+                    status.textContent = `Heard: "${transcript}" — processing...`;
+                }
+                const parsed = parseVoiceQuery(transcript);
+                input.value = parsed.queryText;
+                applyVoiceFilters(parsed);
+                input.form?.submit();
+            });
+
+            recognition.addEventListener("end", () => {
+                isListening = false;
+                micBtn.classList.remove("btn-accent");
+                const status = document.getElementById("voiceStatus");
+                if (status && !isProcessing) {
+                    status.textContent = "Voice input: idle";
+                }
+            });
+
+            recognition.addEventListener("error", () => {
+                isListening = false;
+                isProcessing = false;
+                micBtn.classList.remove("btn-accent");
+                const status = document.getElementById("voiceStatus");
+                if (status) {
+                    status.textContent = "Voice input: error. Try again.";
+                }
+            });
+
+            input.addEventListener("input", () => {
+                if (plateTypeRawInput) {
+                    plateTypeRawInput.value = "";
+                }
+                lastInputSource = "manual";
+            });
+
+            form?.addEventListener("submit", () => {
+                const hasTypedText = (input.value || "").trim().length > 0;
+                if (lastInputSource === "manual" || hasTypedText) {
+                    if (plateTypeRawInput) {
+                        plateTypeRawInput.value = "";
+                    }
+                }
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const typeData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PlateTypeBreakdown));
+            const countryData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PlateCountryBreakdown));
+            const vehicleData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.VehicleClassBreakdown));
+            renderPieChart("plateTypeChart", "plateTypeChartDetails", typeData, ["#f2c94c", "#56ccf2", "#bb6bd9", "#27ae60", "#f2994a"]);
+            renderPieChart("plateCountryChart", "plateCountryChartDetails", countryData, ["#56ccf2", "#f2c94c", "#eb5757", "#27ae60"]);
+            renderPieChart("vehicleClassChart", "vehicleClassChartDetails", vehicleData, ["#bb6bd9", "#56ccf2", "#f2c94c", "#27ae60", "#eb5757"]);
+        });
+
+        function renderPieChart(canvasId, detailsId, data, colors) {
+            const canvas = document.getElementById(canvasId);
+            const details = document.getElementById(detailsId);
+            if (!canvas || !details || !data || data.length === 0) {
+                return;
+            }
+            const labels = data.map(d => d.label ?? d.Label);
+            const counts = data.map(d => d.count ?? d.Count);
+            const total = counts.reduce((sum, value) => sum + value, 0);
+            const detailRows = labels.map((label, index) => ({
+                label,
+                count: counts[index],
+                color: colors[index % colors.length],
+                percent: total > 0 ? Math.round((counts[index] / total) * 100) : 0
+            })).sort((a, b) => b.count - a.count);
+
+            details.innerHTML = detailRows.map(item => `
+                <div class="chart-detail-item">
+                    <div class="chart-detail-meta">
+                        <span class="chart-swatch" style="background:${item.color}"></span>
+                        <span class="chart-detail-label">${item.label}</span>
+                    </div>
+                    <div class="chart-detail-value">${item.count} <span>${item.percent}%</span></div>
+                </div>
+            `).join("");
+
+            new Chart(canvas, {
+                type: "doughnut",
+                data: {
+                    labels,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: colors,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    cutout: "70%",
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    const value = context.raw || 0;
+                                    const percent = total > 0 ? Math.round((value / total) * 100) : 0;
+                                    return `${context.label}: ${value} (${percent}%)`;
+                                }
+                            }
+                        }
+                    },
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const ttsBtn = document.getElementById("ttsBtn");
+            if (!ttsBtn || !("speechSynthesis" in window)) {
+                if (ttsBtn) {
+                    ttsBtn.title = "Text-to-speech not supported in this browser.";
+                }
+                return;
+            }
+
+            let isSpeaking = false;
+            let preferredVoice = null;
+
+            const pickVoice = () => {
+                const voices = window.speechSynthesis.getVoices();
+                if (!voices || voices.length === 0) {
+                    return;
+                }
+                const female = voices.find(v =>
+                    /female|woman|zira|susan|sara|jenny|aria|nora|emma|olivia|linda/i.test(v.name)
+                );
+                preferredVoice = female || voices[0];
+            };
+
+            pickVoice();
+            window.speechSynthesis.onvoiceschanged = pickVoice;
+            ttsBtn.addEventListener("click", () => {
+                if (isSpeaking) {
+                    window.speechSynthesis.cancel();
+                    isSpeaking = false;
+                    ttsBtn.textContent = "Text-to-Speech";
+                    return;
+                }
+
+                const summary = document.getElementById("insideSummaryNarrative")?.textContent?.trim();
+                const bullets = Array.from(document.querySelectorAll("#insideSummaryInsightList .inside-summary-insight-text"))
+                    .map((el) => el.textContent?.trim())
+                    .filter(Boolean);
+                const text = [summary, ...bullets].filter(Boolean).join(". ");
+                if (!text) {
+                    return;
+                }
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = "en-US";
+                utterance.rate = 0.95;
+                utterance.pitch = 1.1;
+                if (preferredVoice) {
+                    utterance.voice = preferredVoice;
+                }
+                utterance.onend = () => {
+                    isSpeaking = false;
+                    ttsBtn.textContent = "Text-to-Speech";
+                };
+                utterance.onerror = () => {
+                    isSpeaking = false;
+                    ttsBtn.textContent = "Text-to-Speech";
+                };
+
+                isSpeaking = true;
+                ttsBtn.textContent = "Stop TTS";
+                window.speechSynthesis.speak(utterance);
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const resetBtn = document.getElementById("resetFiltersBtn");
+            if (!resetBtn) {
+                return;
+            }
+            resetBtn.addEventListener("click", () => {
+                const typeSelect = document.getElementById("plateTypeSelect");
+                const countrySelect = document.getElementById("countrySelect");
+                const windowSelect = document.getElementById("windowSelect");
+                const deviceInput = document.getElementById("deviceIdInput");
+                const searchInput = document.getElementById("searchInput");
+                const plateTypeRawInput = document.getElementById("plateTypeRawInput");
+                if (typeSelect) typeSelect.value = "All";
+                if (countrySelect) countrySelect.value = "All";
+                if (windowSelect) windowSelect.value = "24h";
+                if (deviceInput) deviceInput.value = "";
+                if (searchInput) searchInput.value = "";
+                if (plateTypeRawInput) plateTypeRawInput.value = "";
+            });
+        });
+
+        function parseVoiceQuery(transcript) {
+            const text = transcript.toLowerCase();
+            const result = {
+                queryText: "",
+                plateType: "",
+                country: "",
+                window: "",
+                deviceId: ""
+            };
+
+            const plateTypeTokens = [];
+            if (text.includes("taxi") || text.includes("taxis") || text.includes("taxes") || text.includes("taxies")) plateTypeTokens.push("Taxi");
+            if (text.includes("transport")) plateTypeTokens.push("Transport");
+            if (text.includes("commercial")) plateTypeTokens.push("Commercial");
+            if (text.includes("government")) plateTypeTokens.push("Government");
+            if (text.includes("private")) plateTypeTokens.push("Private");
+            if (plateTypeTokens.length > 0) {
+                result.plateType = plateTypeTokens.join(", ");
+            }
+
+            if (text.includes("qatar")) result.country = "Qatar";
+            if (text.includes("saudi") || text.includes("ksa")) result.country = "KSA";
+            if (text.includes("uae") || text.includes("emirates")) result.country = "UAE";
+            if (text.includes("oman")) result.country = "Oman";
+
+            if (text.includes("last 24") || text.includes("24 hours")) result.window = "24h";
+            if (text.includes("today")) result.window = "today";
+            if (text.includes("7 days") || text.includes("last 7")) result.window = "7d";
+
+            const plateMatch = transcript.match(/[A-Z]{2,4}[-\s]?[A-Z]?\d{3,5}/i);
+            if (plateMatch) {
+                result.queryText = plateMatch[0].replace(/\s+/g, "");
+                return result;
+            }
+
+            const deviceMatch = transcript.match(/device\s*(\d{1,4})/i);
+            if (deviceMatch) {
+                result.deviceId = deviceMatch[1];
+            }
+
+            const digitMatch = transcript.match(/\b(\d{2,5})\b/);
+            if (digitMatch) {
+                if (!result.deviceId) {
+                    result.queryText = digitMatch[1];
+                    return result;
+                }
+            }
+
+            const keywords = [
+                "taxi", "taxis", "taxes", "taxies", "transport", "commercial", "government", "private",
+                "qatar", "ksa", "saudi", "uae", "emirates", "oman", "device",
+                "last 24", "24 hours", "today", "7 days", "last 7"
+            ];
+            const hasOnlyKeywords = keywords.some(k => text.includes(k)) && text.split(" ").length <= 5;
+            result.queryText = hasOnlyKeywords ? "" : transcript;
+
+            return result;
+        }
+
+        function applyVoiceFilters(parsed) {
+            const typeSelect = document.getElementById("plateTypeSelect");
+            const countrySelect = document.getElementById("countrySelect");
+            const windowSelect = document.getElementById("windowSelect");
+            const deviceInput = document.getElementById("deviceIdInput");
+            if (parsed.plateType && typeSelect) {
+                const firstType = parsed.plateType.split(",")[0]?.trim();
+                typeSelect.value = firstType;
+            }
+            const typeRawInput = document.getElementById("plateTypeRawInput");
+            if (parsed.plateType && typeRawInput) {
+                typeRawInput.value = parsed.plateType;
+            }
+            if (parsed.country && countrySelect) {
+                countrySelect.value = parsed.country;
+            }
+            if (parsed.window && windowSelect) {
+                windowSelect.value = parsed.window;
+            }
+            if (parsed.deviceId && deviceInput) {
+                deviceInput.value = parsed.deviceId;
+            }
+        }
+
+        window.initSearchMap = initSearchMap;
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=@mapsKey&amp;libraries=visualization&amp;callback=initSearchMap&amp;loading=async" async></script>
+}
+

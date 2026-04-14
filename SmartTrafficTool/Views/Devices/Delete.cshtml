@@ -1,0 +1,16 @@
+@model SmartTrafficTool.Models.Device
+@{
+    ViewData["Title"] = "Delete Device";
+}
+
+<div class="card">
+    <h3>Delete Device</h3>
+    <p>Are you sure you want to remove <strong>@Model.Name</strong>?</p>
+    <form asp-action="Delete" method="post" class="mt-3">
+        <input type="hidden" asp-for="Id" />
+        <div class="d-flex gap-2">
+            <button class="btn btn-accent" type="submit">Delete</button>
+            <a class="btn btn-ghost" asp-action="Index">Cancel</a>
+        </div>
+    </form>
+</div>

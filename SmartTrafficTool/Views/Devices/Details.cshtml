@@ -1,0 +1,85 @@
+@model SmartTrafficTool.Models.Device
+@inject IConfiguration Configuration
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Device Details";
+    var mapsKey = Configuration["GoogleMaps:ApiKey"] ?? "";
+    var mapDeviceJson = JsonSerializer.Serialize(
+        new
+        {
+            id = Model.Id,
+            name = Model.Name,
+            type = Model.Type,
+            status = Model.Status,
+            location = Model.LocationDescription ?? "Qatar",
+            streamUrl = Model.StreamUrl,
+            latitude = Model.Latitude,
+            longitude = Model.Longitude
+        },
+        new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+    string StatusClass(string? status)
+    {
+        var key = (status ?? "").Trim().ToLowerInvariant();
+        if (key.Contains("online")) return "device-status device-status--online";
+        if (key.Contains("maintenance")) return "device-status device-status--maintenance";
+        if (key.Contains("offline")) return "device-status device-status--offline";
+        return "device-status device-status--unknown";
+    }
+}
+
+<div class="card mb-4">
+    <h3>@Model.Name</h3>
+    <div class="stat-label d-flex align-items-center flex-wrap gap-2">
+        <span>@Model.Type</span>
+        <span class="@StatusClass(Model.Status)">@Model.Status</span>
+    </div>
+    <div class="grid grid-2 mt-4">
+        <div>
+            <div class="list-pill mb-2">Location: @(Model.LocationDescription ?? "Qatar")</div>
+            <div class="list-pill mb-2">Latitude: @Model.Latitude</div>
+            <div class="list-pill">Longitude: @Model.Longitude</div>
+        </div>
+        <div>
+            <div class="list-pill mb-2">Last Seen (UTC): @Model.LastSeenUtc</div>
+            <div class="list-pill">Stream: @(Model.StreamUrl ?? "Not set")</div>
+        </div>
+    </div>
+    <div class="mt-4 d-flex gap-2">
+        <a class="btn btn-accent" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+        <a class="btn btn-ghost" asp-action="Index">Back</a>
+    </div>
+</div>
+
+<div class="card device-detail-map-card">
+    <h3 class="section-title"><i class="fa-solid fa-map-location-dot"></i><span>Device location</span></h3>
+    <p class="stat-label mb-2">This map shows <strong>only this device</strong>. Use Device Management for the full fleet map.</p>
+    @if (string.IsNullOrWhiteSpace(mapsKey))
+    {
+        <div class="alert alert-warning mt-3 mb-0">Google Maps API key is not configured (<code>GoogleMaps:ApiKey</code>).</div>
+    }
+    else
+    {
+        <script type="application/json" id="deviceDetailMapJson">@Html.Raw(mapDeviceJson)</script>
+        <div class="map-shell device-detail-map-shell mt-3"
+             data-device-id="@Model.Id"
+             data-map-device-url="@Url.Action("MapDevice", "Devices")">
+            <div id="deviceDetailMap" class="map-canvas"></div>
+            <div id="deviceDetailMapNote" class="map-overlay device-detail-map-overlay" hidden>
+                <div class="stat-label">No coordinates set for this device. Edit the device and set latitude / longitude (or place it on the map from Device Management).</div>
+            </div>
+        </div>
+    }
+</div>
+
+<partial name="_DeviceDetailsModal" />
+
+@section Scripts {
+    @if (!string.IsNullOrWhiteSpace(mapsKey))
+    {
+        <script src="~/js/device-details-modal.js" asp-append-version="true"></script>
+        <script src="~/js/map-marker-icons.js" asp-append-version="true"></script>
+        <script src="~/js/device-detail-map.js" asp-append-version="true"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?key=@mapsKey&amp;callback=initDeviceDetailMap&amp;loading=async" async defer></script>
+    }
+}

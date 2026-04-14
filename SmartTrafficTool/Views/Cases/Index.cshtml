@@ -1,0 +1,46 @@
+@{
+    ViewData["Title"] = "Case Files";
+}
+
+<div class="grid grid-3">
+    <div class="card">
+        <h3 class="section-title"><i class="fa-solid fa-folder-tree"></i><span>Active Case: DXB-3021</span></h3>
+        <div class="stat-label">Wanted list match • high priority</div>
+        <div class="mt-3">
+            <div class="list-pill mb-2">Vehicle: Black SUV</div>
+            <div class="list-pill mb-2">Violations: 2 pending</div>
+            <div class="list-pill">Last Seen: SZR 18:42</div>
+        </div>
+        <button class="btn btn-accent w-100 mt-3" type="button"><i class="fa-solid fa-file-export me-2"></i>Export Case File</button>
+    </div>
+    <div class="card">
+        <h3 class="section-title"><i class="fa-solid fa-timeline"></i><span>Investigation Timeline</span></h3>
+        <div class="stat-label">Historical tracking and analytics insights.</div>
+        <div class="list-pill mt-3">Day 1 — 6 detections</div>
+        <div class="list-pill mt-2">Day 2 — 2 violations</div>
+        <div class="list-pill mt-2">Day 3 — convoy detected</div>
+    </div>
+    <div class="card">
+        <h3 class="section-title"><i class="fa-solid fa-book-open"></i><span>Case Dossier</span></h3>
+        <div class="stat-label">Includes vehicle data, routes, and alerts.</div>
+        <ul class="mt-3">
+            <li>Owner profile summary</li>
+            <li>Movement history maps</li>
+            <li>Violations + fines</li>
+        </ul>
+        <button class="btn btn-ghost w-100 mt-3" type="button"><i class="fa-solid fa-print me-2"></i>Print Preview</button>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="d-flex align-items-center justify-content-between">
+        <h3 class="section-title"><i class="fa-solid fa-box-archive"></i><span>Case Library</span></h3>
+        <button class="btn btn-ghost btn-sm" type="button"><i class="fa-solid fa-plus me-2"></i>New Case</button>
+    </div>
+    <div class="grid grid-4 mt-3">
+        <div class="list-pill">CT-0193 • Open</div>
+        <div class="list-pill">CT-0192 • Review</div>
+        <div class="list-pill">CT-0191 • Closed</div>
+        <div class="list-pill">CT-0190 • Open</div>
+    </div>
+</div>

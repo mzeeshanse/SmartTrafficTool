@@ -1,0 +1,115 @@
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment WebHostEnvironment
+@inject Microsoft.Extensions.Configuration.IConfiguration LayoutConfiguration
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SmartTraffic AI</title>
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/SmartTrafficTool.styles.css" asp-append-version="true" />
+</head>
+<body class="app-body">
+    @{
+        var navController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+        bool NavActive(string name) => string.Equals(navController, name, StringComparison.OrdinalIgnoreCase);
+    }
+    <div id="appShell" class="app-shell">
+        <aside class="sidebar glass collapsed" id="appSidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <div class="brand-mark">ST</div>
+                    <div class="brand-text">
+                        <div class="brand-title">Smart Traffic</div>
+                        <div class="brand-subtitle">POC</div>
+                    </div>
+                </div>
+                <button class="btn btn-ghost sidebar-toggle" type="button" aria-expanded="false" aria-controls="appSidebar" title="Close menu">
+                    <i class="fa-solid fa-angles-left sidebar-toggle-icon" aria-hidden="true"></i>
+                </button>
+            </div>
+            <nav class="nav flex-column sidebar-nav" aria-label="Main">
+                <a class="nav-link@(NavActive("CommandAndControl") ? " active" : "")" asp-area="" asp-controller="CommandAndControl" asp-action="Index">
+                    <span class="nav-link-main"><span class="nav-link-icon"><i class="fa-solid fa-map-location-dot"></i></span><span class="nav-link-label">Traffic Monitoring Hub</span></span>
+                    <span class="nav-link-chevron"><i class="fa-solid fa-chevron-right"></i></span>
+                </a>
+                <a class="nav-link@(NavActive("Search") ? " active" : "")" asp-area="" asp-controller="Search" asp-action="Index">
+                    <span class="nav-link-main"><span class="nav-link-icon"><i class="fa-solid fa-magnifying-glass"></i></span><span class="nav-link-label">AI Forensic Search</span></span>
+                    <span class="nav-link-chevron"><i class="fa-solid fa-chevron-right"></i></span>
+                </a>
+                <a class="nav-link@(NavActive("Devices") ? " active" : "")" asp-area="" asp-controller="Devices" asp-action="Index">
+                    <span class="nav-link-main"><span class="nav-link-icon"><i class="fa-solid fa-camera"></i></span><span class="nav-link-label">Device Management</span></span>
+                    <span class="nav-link-chevron"><i class="fa-solid fa-chevron-right"></i></span>
+                </a>
+                <a class="nav-link@(NavActive("ForensicAnalytics") ? " active" : "")" asp-area="" asp-controller="ForensicAnalytics" asp-action="Index">
+                    <span class="nav-link-main"><span class="nav-link-icon"><i class="fa-solid fa-chart-line"></i></span><span class="nav-link-label">Analytics</span></span>
+                    <span class="nav-link-chevron"><i class="fa-solid fa-chevron-right"></i></span>
+                </a>
+                @if (WebHostEnvironment.IsDevelopment() || LayoutConfiguration.GetValue<bool>("PocDemo:AllowAppendRecentData"))
+                {
+                    <a class="nav-link@(NavActive("PocDemo") ? " active" : "") nav-link--poc" asp-area="" asp-controller="PocDemo" asp-action="Index">
+                        <span class="nav-link-main"><span class="nav-link-icon"><i class="fa-solid fa-road"></i></span><span class="nav-link-label">POC route simulator</span></span>
+                        <span class="nav-link-chevron"><i class="fa-solid fa-chevron-right"></i></span>
+                    </a>
+                }
+            </nav>
+            <div class="sidebar-footer">
+                <div class="login-card glass">
+                    <div class="login-label">Authenticated Session</div>
+                    <div class="login-user">Administrator</div>
+                    <div class="login-role">Traffic Ops Supervisor</div>
+                    <button class="btn btn-accent w-100 mt-2" type="button"><i class="fa-regular fa-id-badge me-2" aria-hidden="true"></i><span class="sidebar-profile-label">Open Profile</span></button>
+                </div>
+            </div>
+        </aside>
+
+        <div class="app-main">
+            <header class="topbar glass">
+                <div class="topbar-left">
+                    <button type="button" class="btn btn-ghost topbar-menu-toggle" aria-label="Open navigation menu" title="Menu">
+                        <i class="fa-solid fa-bars" aria-hidden="true"></i>
+                    </button>
+                    <div class="topbar-titles">
+                        <div class="page-title">@ViewData["Title"]</div>
+                        <div class="page-subtitle">@(ViewData["PageSubtitle"] as string ?? "Search drives intelligence, map visualizes it.")</div>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <div class="lang-switcher">
+                        <button class="btn btn-ghost btn-sm" type="button"><i class="fa-solid fa-globe me-1"></i>EN</button>
+                        <button class="btn btn-ghost btn-sm" type="button"><i class="fa-solid fa-language me-1"></i>AR</button>
+                    </div>
+                    <button class="btn btn-outline-warning btn-sm" type="button"><i class="fa-regular fa-bell me-1"></i>Alerts (3)</button>
+                    <div class="profile-pill">
+                        <img src="https://placehold.co/48x48" alt="Profile" />
+                        <div>
+                            <div class="profile-name">Administrator</div>
+                            <div class="profile-role">Ops Lead</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main role="main" class="app-content">
+                @RenderBody()
+            </main>
+
+            <footer class="app-footer">
+                <div>© 2026 Smart Traffic — Secure Mobility Operations</div>
+                <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            </footer>
+        </div>
+    </div>
+
+    <partial name="_CopilotPanel" />
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/copilot.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
