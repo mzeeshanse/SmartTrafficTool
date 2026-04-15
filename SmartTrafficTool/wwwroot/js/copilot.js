@@ -164,7 +164,7 @@
 
           const colors = w.chart.colors && w.chart.colors.length
             ? w.chart.colors
-            : ["#56ccf2", "#f2c94c", "#bb6bd9", "#27ae60", "#eb5757", "#8fa1bd"];
+            : ["#5b84a2", "#c55272", "#bb6bd9", "#27ae60", "#eb5757", "#8fa1bd"];
 
           const kind = (w.chart.kind || "doughnut").toLowerCase();
           const cfg = {

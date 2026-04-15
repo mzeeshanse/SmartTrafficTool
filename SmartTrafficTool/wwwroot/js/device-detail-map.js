@@ -29,7 +29,7 @@
     }
     return {
       path: google.maps.SymbolPath.CIRCLE,
-      fillColor: "#f2c94c",
+      fillColor: "#c55272",
       fillOpacity: 0.95,
       strokeColor: "#27ae60",
       strokeOpacity: 1,

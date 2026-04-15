@@ -617,7 +617,7 @@ public class CopilotIntentService : ICopilotIntentService
         }).ToList();
 
         var data = typeMix.Select(t => t.C).ToList();
-        var colors = new List<string> { "#56ccf2", "#f2c94c", "#bb6bd9", "#27ae60", "#eb5757", "#8fa1bd" };
+        var colors = new List<string> { "#5b84a2", "#c55272", "#bb6bd9", "#27ae60", "#eb5757", "#8fa1bd" };
 
         var typeIdsFilter = ResolvePlateTypeIds(parsed.PlateType);
         var skipTypeChart = typeIdsFilter.Count == 1 || (labels.Count <= 1 && typeMix.Sum(x => x.C) > 0);

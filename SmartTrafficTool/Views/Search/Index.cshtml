@@ -725,10 +725,10 @@
         const SEARCH_HEAT_GRADIENT = [
             "rgba(8, 12, 22, 0)",
             "rgba(8, 12, 22, 0)",
-            "rgba(45, 120, 180, 0.45)",
-            "rgba(86, 204, 242, 0.78)",
-            "rgba(86, 204, 242, 0.92)",
-            "rgba(242, 201, 76, 0.94)",
+            "rgba(44, 69, 92, 0.48)",
+            "rgba(62, 93, 122, 0.78)",
+            "rgba(62, 110, 148, 0.9)",
+            "rgba(158, 45, 72, 0.94)",
             "rgba(242, 153, 74, 0.97)",
             "rgba(235, 87, 87, 0.98)",
             "rgba(192, 35, 35, 1)",
@@ -1237,7 +1237,7 @@
             trackingPath = new google.maps.Polyline({
                 path: [path[0]],
                 geodesic: true,
-                strokeColor: "#f2c94c",
+                strokeColor: "#e8b4c2",
                 strokeOpacity: 0.85,
                 strokeWeight: 3
             });
@@ -1386,12 +1386,12 @@
                         </filter>
                     </defs>
                     <path d="M8 25l3-8 5-6h10l5 6 3 8v6h-3a3 3 0 0 1-6 0H17a3 3 0 0 1-6 0H8z"
-                          fill="#f2c94c" stroke="#ffffff" stroke-width="1.5" filter="url(#glow)"/>
+                          fill="#c55272" stroke="#ffffff" stroke-width="1.5" filter="url(#glow)"/>
                     <rect x="15" y="14" width="12" height="6" rx="2" fill="#1a2a3d"/>
                     <circle cx="14" cy="30" r="2.4" fill="#0b1424"/>
                     <circle cx="28" cy="30" r="2.4" fill="#0b1424"/>
-                    <circle cx="12" cy="22" r="2" fill="#56ccf2"/>
-                    <circle cx="30" cy="22" r="2" fill="#56ccf2"/>
+                    <circle cx="12" cy="22" r="2" fill="#5b84a2"/>
+                    <circle cx="30" cy="22" r="2" fill="#5b84a2"/>
                 </svg>`;
 
             return {
@@ -1431,7 +1431,7 @@
         function getRecordTimeBadgeIcon(timeLabel) {
             const svg = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="130" height="44" viewBox="0 0 130 44" fill="none">
-                    <rect x="3" y="3" width="124" height="38" rx="12" fill="rgba(11,20,36,0.94)" stroke="#56ccf2" stroke-width="1.6"/>
+                    <rect x="3" y="3" width="124" height="38" rx="12" fill="rgba(11,20,36,0.94)" stroke="#5b84a2" stroke-width="1.6"/>
                     <text x="65" y="17" text-anchor="middle" fill="#8fa1bd" font-size="10" font-family="Arial, sans-serif">Record Time</text>
                     <text x="65" y="29" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700" font-family="Arial, sans-serif">${timeLabel}</text>
                 </svg>`;
@@ -1627,10 +1627,10 @@
                 liveTrackingCircle.setMap(null);
             }
             liveTrackingCircle = new google.maps.Circle({
-                strokeColor: "#56ccf2",
+                strokeColor: "#5b84a2",
                 strokeOpacity: 0.42,
                 strokeWeight: 1,
-                fillColor: "#56ccf2",
+                fillColor: "#5b84a2",
                 fillOpacity: 0.1,
                 map: liveTrackingMap,
                 center,
@@ -1837,9 +1837,9 @@
             const typeData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PlateTypeBreakdown));
             const countryData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PlateCountryBreakdown));
             const vehicleData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.VehicleClassBreakdown));
-            renderPieChart("plateTypeChart", "plateTypeChartDetails", typeData, ["#f2c94c", "#56ccf2", "#bb6bd9", "#27ae60", "#f2994a"]);
-            renderPieChart("plateCountryChart", "plateCountryChartDetails", countryData, ["#56ccf2", "#f2c94c", "#eb5757", "#27ae60"]);
-            renderPieChart("vehicleClassChart", "vehicleClassChartDetails", vehicleData, ["#bb6bd9", "#56ccf2", "#f2c94c", "#27ae60", "#eb5757"]);
+            renderPieChart("plateTypeChart", "plateTypeChartDetails", typeData, ["#e8b4c2", "#5b84a2", "#bb6bd9", "#27ae60", "#c17a62"]);
+            renderPieChart("plateCountryChart", "plateCountryChartDetails", countryData, ["#5b84a2", "#e8b4c2", "#eb5757", "#27ae60"]);
+            renderPieChart("vehicleClassChart", "vehicleClassChartDetails", vehicleData, ["#bb6bd9", "#5b84a2", "#e8b4c2", "#27ae60", "#eb5757"]);
         });
 
         function renderPieChart(canvasId, detailsId, data, colors) {

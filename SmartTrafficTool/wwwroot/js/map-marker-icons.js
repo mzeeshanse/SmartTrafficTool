@@ -31,8 +31,8 @@
       return (
         '<g transform="translate(0,1)">' +
         '<rect x="11" y="9" width="18" height="14" rx="2.5" fill="#102033" stroke="#ffffff" stroke-width="1.1"/>' +
-        '<circle cx="20" cy="16" r="3.8" fill="#56ccf2"/>' +
-        '<rect x="24" y="11" width="3" height="2" rx="0.5" fill="#f2c94c"/>' +
+        '<circle cx="20" cy="16" r="3.8" fill="#5b84a2"/>' +
+        '<rect x="24" y="11" width="3" height="2" rx="0.5" fill="#c55272"/>' +
         "</g>"
       );
     }
@@ -58,14 +58,14 @@
       return (
         '<g transform="translate(0,1)">' +
         '<path d="M12 20 Q20 12 28 20 Q20 24 12 20" fill="#1a2536" stroke="#2d9cdb" stroke-width="1.1"/>' +
-        '<circle cx="26" cy="12" r="3.5" fill="#f2c94c" stroke="#ffffff" stroke-width="0.8"/>' +
+        '<circle cx="26" cy="12" r="3.5" fill="#c55272" stroke="#ffffff" stroke-width="0.8"/>' +
         "</g>"
       );
     }
     return (
       '<g transform="translate(0,1)">' +
       '<circle cx="20" cy="16" r="7" fill="#102033" stroke="#ffffff" stroke-width="1.3"/>' +
-      '<circle cx="20" cy="16" r="3" fill="#f2994a"/>' +
+      '<circle cx="20" cy="16" r="3" fill="#9e4560"/>' +
       "</g>"
     );
   }
@@ -117,11 +117,11 @@
       case 2:
         return "#f2994a";
       case 3:
-        return "#56ccf2";
+        return "#5b84a2";
       case 4:
         return "#bb6bd9";
       case 5:
-        return "#f2c94c";
+        return "#e8b4c2";
       default:
         return "#9db0ca";
     }
@@ -129,10 +129,10 @@
 
   function plateTypeStringFill(plateType) {
     const t = (plateType || "").toLowerCase();
-    if (t.includes("taxi")) return "#f2c94c";
+    if (t.includes("taxi")) return "#e8b4c2";
     if (t.includes("transport")) return "#bb6bd9";
-    if (t.includes("commercial")) return "#f2994a";
-    if (t.includes("government")) return "#56ccf2";
+    if (t.includes("commercial")) return "#c17a62";
+    if (t.includes("government")) return "#5b84a2";
     if (t.includes("private")) return "#8fa1bd";
     return "#9db0ca";
   }
@@ -148,7 +148,7 @@
       case 4:
         return "#d62828";
       default:
-        return "#56ccf2";
+        return "#7a8aa8";
     }
   }
 
@@ -158,7 +158,7 @@
     if (c.includes("uae") || c.includes("emirates")) return "#009a4e";
     if (c.includes("ksa") || c.includes("saudi")) return "#0d7d45";
     if (c.includes("oman")) return "#d62828";
-    return "#56ccf2";
+    return "#7a8aa8";
   }
 
   /**

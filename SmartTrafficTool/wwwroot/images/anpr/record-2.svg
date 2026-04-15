@@ -7,7 +7,7 @@
   </defs>
   <rect width="640" height="360" rx="24" fill="url(#bg2)"/>
   <rect x="80" y="80" width="480" height="180" rx="24" fill="#26364a"/>
-  <rect x="210" y="210" width="220" height="70" rx="10" fill="#f7f7f7" stroke="#56ccf2" stroke-width="4"/>
+  <rect x="210" y="210" width="220" height="70" rx="10" fill="#f7f7f7" stroke="#5b84a2" stroke-width="4"/>
   <text x="320" y="255" font-size="28" text-anchor="middle" fill="#1f1f1f" font-family="Segoe UI, sans-serif">KSA-B2147</text>
   <text x="320" y="65" font-size="18" text-anchor="middle" fill="#94a9c4" font-family="Segoe UI, sans-serif">Transaction Frame 02</text>
 </svg>
