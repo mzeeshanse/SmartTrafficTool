@@ -282,7 +282,10 @@ public static class SeedData
 
     /// <summary>
     /// Inserts one ANPR transaction per device on <paramref name="pathDeviceIds"/> in order,
-    /// with monotonically increasing <see cref="ANPRTRAN.CREATED_DATE_TIME"/> (simulated movement), all within the last 24 hours (UTC).
+    /// with monotonically increasing <see cref="ANPRTRAN.CREATED_DATE_TIME"/> (simulated movement).
+    /// Times are generated with realistic spacing, then <paramref name="capturedDateUtc"/> replaces only the date
+    /// component (UTC calendar day); time-of-day is preserved. If <paramref name="capturedDateUtc"/> is the current UTC date,
+    /// results are clamped to remain within the rolling last-24-hours window (existing behaviour).
     /// </summary>
     /// <returns>Inserted count, or (0, error) on validation failure.</returns>
     public static (int Inserted, string? Error) AppendTransactionsAlongPath(
@@ -292,7 +295,8 @@ public static class SeedData
         string countryName,
         IReadOnlyList<int> pathDeviceIds,
         bool alertOnLastSite,
-        bool speedViolationOnLastSite)
+        bool speedViolationOnLastSite,
+        DateOnly capturedDateUtc)
     {
         var trimmedPlate = (plateText ?? string.Empty).Trim();
         if (string.IsNullOrEmpty(trimmedPlate))
@@ -350,7 +354,22 @@ public static class SeedData
             eventTimes[i] = eventTimes[i + 1].AddMinutes(-rng.Next(4, 16));
         }
 
-        if (eventTimes[0] < minStart)
+        for (var i = 0; i < nHop; i++)
+        {
+            var t = eventTimes[i];
+            eventTimes[i] = new DateTime(
+                capturedDateUtc.Year,
+                capturedDateUtc.Month,
+                capturedDateUtc.Day,
+                t.Hour,
+                t.Minute,
+                t.Second,
+                t.Millisecond,
+                DateTimeKind.Utc);
+        }
+
+        var todayUtc = DateOnly.FromDateTime(now);
+        if (capturedDateUtc == todayUtc && eventTimes[0] < minStart)
         {
             var shift = minStart - eventTimes[0];
             for (var i = 0; i < nHop; i++)

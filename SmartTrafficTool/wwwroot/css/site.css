@@ -179,7 +179,8 @@ small {
 
 .app-shell {
   position: relative;
-  z-index: 1;
+  /* No z-index: modals live inside the shell; a low z-index here traps them under Bootstrap’s
+     .modal-backdrop (1050) so clicks never reach dialog buttons — only a full reload appears to help. */
   display: grid;
   grid-template-columns: 260px 1fr;
   grid-template-rows: minmax(0, 1fr);
@@ -1035,15 +1036,15 @@ small {
   box-sizing: border-box;
 }
 
-.executive-summary-card {
+.search-summary-card {
   flex-shrink: 0;
 }
 
-.executive-sidebar {
+.search-summary-sidebar {
   align-content: start;
 }
 
-.executive-metrics-stack {
+.search-sidebar-metrics-stack {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -1051,7 +1052,7 @@ small {
   min-height: 0;
 }
 
-.executive-metrics-stack .executive-metric-card {
+.search-sidebar-metrics-stack .search-sidebar-metric-card {
   min-height: 0;
   flex: 0 0 auto;
 }
@@ -1582,7 +1583,7 @@ small {
   }
 }
 
-.executive-metric-card {
+.search-sidebar-metric-card {
   min-height: 130px;
 }
 
@@ -1685,7 +1686,7 @@ small {
     grid-template-columns: repeat(2, minmax(220px, 1fr));
   }
 
-  .results-grid.results-grid--executive {
+  .results-grid.results-grid--standard {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
@@ -1695,7 +1696,7 @@ small {
     grid-template-columns: 1fr;
   }
 
-  .results-grid.results-grid--executive {
+  .results-grid.results-grid--standard {
     grid-template-columns: 1fr;
   }
 }
@@ -3989,7 +3990,7 @@ small {
   color: #eb5757 !important;
 }
 
-/* ——— Analytics (ForensicAnalytics) ——— */
+/* ——— AI Anomalies (ForensicAnalytics) ——— */
 .forensic-page {
   width: 100%;
   max-width: none;

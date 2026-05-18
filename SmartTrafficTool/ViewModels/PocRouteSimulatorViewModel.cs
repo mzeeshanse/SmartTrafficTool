@@ -13,6 +13,13 @@ public class PocRouteSimulatorViewModel
 
     public string Country { get; set; } = "Qatar";
 
+    /// <summary>
+    /// Calendar day (interpreted as UTC) used for <see cref="ANPRTRAN.CREATED_DATE_TIME"/> / <see cref="ANPRTRAN.CREATED_DATE"/> —
+    /// only the date part is applied; times along the path keep their generated time-of-day.
+    /// </summary>
+    [Display(Name = "Captured date (UTC)")]
+    public DateOnly CapturedDate { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
+
     /// <summary>Ordered device IDs defining the vehicle path (first = entry, last = exit).</summary>
     public List<int> PathDeviceIds { get; set; } = [];
 

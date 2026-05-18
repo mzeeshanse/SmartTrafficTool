@@ -154,7 +154,7 @@
                     <div id="searchMap" class="map-canvas"></div>
                     <div class="map-overlay">
                         @* <div class="map-title">View on Map</div>
-                        <div class="stat-label">Shared situational map for both executive and investigation search.</div> *@
+                        <div class="stat-label">Shared situational map for standard and investigation search.</div> *@
                     </div>
                 </div>
             </div>
@@ -163,7 +163,7 @@
         <div id="cardView" class="result-view @(Model.CurrentView == "card" ? "active" : "")">
             <div class="card result-panel-card">
                 <div class="result-panel-body">
-                    <div class="grid results-grid @(Model.IsInvestigationMode ? "" : "results-grid--executive")">
+                    <div class="grid results-grid @(Model.IsInvestigationMode ? "" : "results-grid--standard")">
                         @foreach (var item in Model.Results)
                         {
                             var plate = item.Transaction.PLATE_TEXT ?? "—";
@@ -420,8 +420,8 @@
     </div>
     @if (!Model.IsInvestigationMode)
     {
-        <aside class="search-insides-column investigation-section executive-sidebar" aria-label="Executive summary and charts">
-            <div class="card executive-summary-card investigation-summary-card">
+        <aside class="search-insides-column investigation-section search-summary-sidebar" aria-label="Summary and charts">
+            <div class="card search-summary-card investigation-summary-card">
                 <h4 class="section-title section-title--sidebar"><i class="fa-solid fa-file-shield"></i><span>Inside Summary</span></h4>
                 <article class="map-popup-card map-popup-card--transaction map-popup-card--inside-summary inside-summary-card inside-summary--sidebar" aria-label="Inside summary">
                     <div class="inside-summary-accent" aria-hidden="true"></div>
@@ -434,10 +434,6 @@
                                 <div class="map-popup-trans-titles">
                                     <div class="map-popup-title-row">
                                         <h4 class="map-popup-plate-title inside-summary-title">Intelligence brief</h4>
-                                        <div class="map-popup-risk map-popup-risk--low">
-                                            <span class="map-popup-risk-dot" aria-hidden="true"></span>
-                                            <span class="map-popup-risk-text">Executive</span>
-                                        </div>
                                     </div>
                                     <p class="map-popup-trans-sub inside-summary-sub">
                                         @Model.TotalResults.ToString("N0") result(s) · @filterWindowLabel · @queryContextLabel
@@ -482,22 +478,22 @@
                     <button id="ttsBtn" class="btn btn-ghost btn-sm" type="button"><i class="fa-solid fa-volume-high me-2"></i>Text-to-Speech</button>
                 </div>
             </div>
-            <div class="executive-metrics-stack">
-                <div class="card executive-metric-card">
+            <div class="search-sidebar-metrics-stack">
+                <div class="card search-sidebar-metric-card">
                     <div class="stat-label">Plate Type</div>
                     <div class="micro-chart">
                         <canvas id="plateTypeChart"></canvas>
                     </div>
                     <div id="plateTypeChartDetails" class="chart-detail-list"></div>
                 </div>
-                <div class="card executive-metric-card">
+                <div class="card search-sidebar-metric-card">
                     <div class="stat-label">Plate Country</div>
                     <div class="micro-chart">
                         <canvas id="plateCountryChart"></canvas>
                     </div>
                     <div id="plateCountryChartDetails" class="chart-detail-list"></div>
                 </div>
-                <div class="card executive-metric-card">
+                <div class="card search-sidebar-metric-card">
                     <div class="stat-label">Vehicle Classification</div>
                     <div class="micro-chart">
                         <canvas id="vehicleClassChart"></canvas>

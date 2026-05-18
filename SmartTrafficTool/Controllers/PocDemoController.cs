@@ -73,7 +73,8 @@ public class PocDemoController : Controller
             AnprCameras = cameras,
             PlateText = "Q123456",
             PlateType = "Private",
-            Country = "Qatar"
+            Country = "Qatar",
+            CapturedDate = DateOnly.FromDateTime(DateTime.UtcNow)
         };
 
         await LoadSavedPathOptionsAsync(model);
@@ -96,7 +97,7 @@ public class PocDemoController : Controller
         }
 
         ViewData["Title"] = "POC route simulator";
-        ViewData["PageSubtitle"] = "Insert demo ANPR transactions along a camera path (last 24 hours UTC)";
+        ViewData["PageSubtitle"] = "Insert demo ANPR transactions along a path — choose UTC captured date (time-of-day spacing preserved)";
         return View(model);
     }
 
@@ -175,10 +176,15 @@ public class PocDemoController : Controller
         model.PathDeviceIds ??= [];
         model.PathDeviceIds = model.PathDeviceIds.Where(id => id > 0).ToList();
 
+        if (model.CapturedDate == default)
+        {
+            model.CapturedDate = DateOnly.FromDateTime(DateTime.UtcNow);
+        }
+
         if (!ModelState.IsValid)
         {
             ViewData["Title"] = "POC route simulator";
-            ViewData["PageSubtitle"] = "Insert demo ANPR transactions along a camera path (last 24 hours UTC)";
+            ViewData["PageSubtitle"] = "Insert demo ANPR transactions along a path — choose UTC captured date (time-of-day spacing preserved)";
             return View("Index", model);
         }
 
@@ -186,7 +192,7 @@ public class PocDemoController : Controller
         {
             ModelState.AddModelError(nameof(model.PathDeviceIds), "Add at least one camera to the path (in order).");
             ViewData["Title"] = "POC route simulator";
-            ViewData["PageSubtitle"] = "Insert demo ANPR transactions along a camera path (last 24 hours UTC)";
+            ViewData["PageSubtitle"] = "Insert demo ANPR transactions along a path — choose UTC captured date (time-of-day spacing preserved)";
             return View("Index", model);
         }
 
@@ -197,18 +203,19 @@ public class PocDemoController : Controller
             model.Country,
             model.PathDeviceIds,
             model.AlertOnLastSite,
-            model.SpeedViolationOnLastSite);
+            model.SpeedViolationOnLastSite,
+            model.CapturedDate);
 
         if (error != null)
         {
             ModelState.AddModelError(string.Empty, error);
             ViewData["Title"] = "POC route simulator";
-            ViewData["PageSubtitle"] = "Insert demo ANPR transactions along a camera path (last 24 hours UTC)";
+            ViewData["PageSubtitle"] = "Insert demo ANPR transactions along a path — choose UTC captured date (time-of-day spacing preserved)";
             return View("Index", model);
         }
 
         TempData["PocDemoSuccess"] =
-            $"Inserted {inserted} transaction(s) for plate “{model.PlateText.Trim()}” along {model.PathDeviceIds.Count} camera(s). Times increase along the path; use Search with Last 24 Hours.";
+            $"Inserted {inserted} transaction(s) for plate “{model.PlateText.Trim()}” on {model.CapturedDate:yyyy-MM-dd} (UTC) along {model.PathDeviceIds.Count} camera(s). Times increase along the path; search for that date or window as needed.";
         return RedirectToAction(nameof(Index));
     }
 }

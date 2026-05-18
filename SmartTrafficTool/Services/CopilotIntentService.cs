@@ -129,13 +129,13 @@ public class CopilotIntentService : ICopilotIntentService
         var navTrim = lower.Trim();
         if (Regex.IsMatch(
                 navTrim,
-                @"^(launch\s+)?(forensic\s+)?analytics(\s+(page|module|dashboard))?[\s!.]*$",
+                @"^(launch\s+)?((forensic\s+)?analytics|ai\s+anomalies)(\s+(page|module|dashboard))?[\s!.]*$",
                 RegexOptions.IgnoreCase)
             || navTrim.Equals("analytic", StringComparison.OrdinalIgnoreCase))
         {
             href = "/ForensicAnalytics";
-            label = "Analytics";
-            reply = "Opening **Analytics** (forensic analytics).";
+            label = "AI Anomalies";
+            reply = "Opening **AI Anomalies**.";
             return true;
         }
 
@@ -173,11 +173,11 @@ public class CopilotIntentService : ICopilotIntentService
             return true;
         }
 
-        if (open && (lower.Contains("analytic") || lower.Contains("report")))
+        if (open && (lower.Contains("analytic") || lower.Contains("report") || Regex.IsMatch(lower, @"\bai\s+anomalies?\b")))
         {
             href = "/ForensicAnalytics";
-            label = "Analytics";
-            reply = "Opening **Analytics** (forensic analytics).";
+            label = "AI Anomalies";
+            reply = "Opening **AI Anomalies**.";
             return true;
         }
 

@@ -18,7 +18,7 @@
 <div class="card mb-4">
     <h2 class="section-title mb-2"><i class="fa-solid fa-route me-2" aria-hidden="true"></i>Simulate vehicle path</h2>
     <p class="stat-label mb-4">
-        Define plate metadata, then build an <strong>ordered list of ANPR cameras</strong>. One transaction is inserted per camera with timestamps moving forward along the path (all within the last 24 hours UTC). You can <strong>save</strong> a path by name and <strong>load</strong> it later from the list.
+        Define plate metadata and <strong>captured date (UTC)</strong>, then build an <strong>ordered list of ANPR cameras</strong>. One transaction is inserted per camera with monotonic times along the path; only the <strong>calendar date</strong> is taken from your selection — the simulated time-of-day spacing is preserved. For <strong>today (UTC)</strong>, timestamps stay within the rolling last-24-hours window. For other dates, the same time pattern is placed on that day so you can backfill demo data. You can <strong>save</strong> a path by name and <strong>load</strong> it later from the list.
     </p>
 
     <div class="poc-saved-path-toolbar glass p-3 rounded-3 border border-secondary border-opacity-25 mb-4">
@@ -80,30 +80,36 @@
 
         <div class="grid grid-2 mb-3">
             <div>
+                <label asp-for="CapturedDate" class="form-label">Captured date (UTC)</label>
+                <input asp-for="CapturedDate" type="date" class="form-control" />
+                <span asp-validation-for="CapturedDate" class="text-danger small"></span>
+                <div class="form-text small text-secondary">Replaces only the date on captured time; hop-to-hop times stay the same.</div>
+            </div>
+            <div>
                 <label asp-for="PlateText" class="form-label">Plate text</label>
                 <input asp-for="PlateText" class="form-control" maxlength="16" placeholder="e.g. Q123456" autocomplete="off" />
                 <span asp-validation-for="PlateText" class="text-danger small"></span>
             </div>
-            <div class="d-flex flex-wrap gap-3">
-                <div class="flex-grow-1" style="min-width: 140px;">
-                    <label asp-for="PlateType" class="form-label">Plate type</label>
-                    <select asp-for="PlateType" class="form-select">
-                        <option value="Private">Private</option>
-                        <option value="Commercial">Commercial</option>
-                        <option value="Government">Government</option>
-                        <option value="Transport">Transport</option>
-                        <option value="Taxi">Taxi</option>
-                    </select>
-                </div>
-                <div class="flex-grow-1" style="min-width: 140px;">
-                    <label asp-for="Country" class="form-label">Country</label>
-                    <select asp-for="Country" class="form-select">
-                        <option value="Qatar">Qatar</option>
-                        <option value="UAE">UAE</option>
-                        <option value="KSA">KSA</option>
-                        <option value="Oman">Oman</option>
-                    </select>
-                </div>
+        </div>
+        <div class="grid grid-2 mb-3">
+            <div>
+                <label asp-for="PlateType" class="form-label">Plate type</label>
+                <select asp-for="PlateType" class="form-select">
+                    <option value="Private">Private</option>
+                    <option value="Commercial">Commercial</option>
+                    <option value="Government">Government</option>
+                    <option value="Transport">Transport</option>
+                    <option value="Taxi">Taxi</option>
+                </select>
+            </div>
+            <div>
+                <label asp-for="Country" class="form-label">Country</label>
+                <select asp-for="Country" class="form-select">
+                    <option value="Qatar">Qatar</option>
+                    <option value="UAE">UAE</option>
+                    <option value="KSA">KSA</option>
+                    <option value="Oman">Oman</option>
+                </select>
             </div>
         </div>
 
