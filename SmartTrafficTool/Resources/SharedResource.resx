@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Extensions, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Extensions, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51</value>
+  </resheader>
+
+  <!-- App shell -->
+  <data name="App_ProductName" xml:space="preserve"><value>SmartTraffic AI</value></data>
+  <data name="App_DefaultPageSubtitle" xml:space="preserve"><value>Search drives intelligence; the map brings it together.</value></data>
+  <data name="Meta_AltNationalEmblem" xml:space="preserve"><value>State of Qatar national emblem</value></data>
+  <data name="Meta_Lang_Ar" xml:space="preserve"><value>Arabic — Qatar</value></data>
+  <data name="Meta_Lang_En" xml:space="preserve"><value>English — Qatar</value></data>
+  <data name="Meta_MainNavAria" xml:space="preserve"><value>Primary navigation</value></data>
+
+  <!-- Brand -->
+  <data name="Brand_MinistryTitle" xml:space="preserve"><value>Ministry of Interior</value></data>
+  <data name="Brand_SubtitleLine" xml:space="preserve"><value>State of Qatar · Smart Traffic</value></data>
+
+  <!-- Navigation -->
+  <data name="Nav_TrafficMonitoringHub" xml:space="preserve"><value>Traffic Monitoring Hub</value></data>
+  <data name="Nav_AIForensicSearch" xml:space="preserve"><value>AI Forensic Search</value></data>
+  <data name="Nav_DeviceManagement" xml:space="preserve"><value>Device Management</value></data>
+  <data name="Nav_AIAnomalies" xml:space="preserve"><value>AI Anomalies</value></data>
+  <data name="Nav_PocSimulator" xml:space="preserve"><value>POC Route Simulator</value></data>
+
+  <!-- Sidebar footer -->
+  <data name="Auth_SessionBanner" xml:space="preserve"><value>Authenticated session</value></data>
+  <data name="Auth_Administrator" xml:space="preserve"><value>Administrator</value></data>
+  <data name="Auth_TrafficOpsSupervisor" xml:space="preserve"><value>Traffic Operations Supervisor</value></data>
+  <data name="Auth_OpenProfile" xml:space="preserve"><value>Open Profile</value></data>
+  <data name="Auth_OpsLead" xml:space="preserve"><value>Operations Lead</value></data>
+
+  <!-- Top bar -->
+  <data name="Topbar_CloseMenuAria" xml:space="preserve"><value>Collapse menu</value></data>
+  <data name="Topbar_CloseMenuTooltip" xml:space="preserve"><value>Close menu</value></data>
+  <data name="Topbar_OpenNavAria" xml:space="preserve"><value>Open navigation menu</value></data>
+  <data name="Topbar_OpenNavTooltip" xml:space="preserve"><value>Menu</value></data>
+  <data name="Topbar_AlertsFmt" xml:space="preserve"><value>Alerts ({0})</value></data>
+  <data name="Topbar_LanguageSelect" xml:space="preserve"><value>Choose language</value></data>
+
+  <!-- Footer -->
+  <data name="Footer_CopyrightShort" xml:space="preserve"><value>© 2026 Smart Traffic — Secure Mobility Operations</value></data>
+  <data name="Footer_PrivacyLink" xml:space="preserve"><value>Privacy</value></data>
+
+  <!-- Page titles -->
+  <data name="Title_TrafficMonitoringHub" xml:space="preserve"><value>Traffic Monitoring Hub</value></data>
+  <data name="Title_AIForensicSearch" xml:space="preserve"><value>AI Forensic Search</value></data>
+  <data name="Title_DeviceManagement" xml:space="preserve"><value>Device Management</value></data>
+  <data name="Title_AIAnomalies" xml:space="preserve"><value>AI Anomalies</value></data>
+  <data name="Title_PocRouteSimulator" xml:space="preserve"><value>POC Route Simulator</value></data>
+  <data name="Title_AnalyticsDashboard" xml:space="preserve"><value>Analytics Dashboard</value></data>
+  <data name="Title_Cases" xml:space="preserve"><value>Case Files</value></data>
+  <data name="Title_HomePage" xml:space="preserve"><value>Home</value></data>
+  <data name="Title_Privacy" xml:space="preserve"><value>Privacy Policy</value></data>
+  <data name="Title_Error" xml:space="preserve"><value>Error</value></data>
+  <data name="Title_DeviceDetails" xml:space="preserve"><value>Device details</value></data>
+  <data name="Title_AddDevice" xml:space="preserve"><value>Add device</value></data>
+  <data name="Title_EditDevice" xml:space="preserve"><value>Edit device</value></data>
+  <data name="Title_DeleteDevice" xml:space="preserve"><value>Remove device</value></data>
+
+  <!-- Forensic page -->
+  <data name="ForensicAnalyzing" xml:space="preserve"><value>Analyzing anomalies…</value></data>
+
+  <!-- Poc subtitle strings (controller fallback) -->
+  <data name="Poc_PageSubtitleDefault" xml:space="preserve"><value>Generate demo reads along camera paths — select captured date (UTC) while keeping intra-path timing.</value></data>
+
+  <!-- AI Assistant (panel) -->
+  <data name="Copilot_OpenTooltip" xml:space="preserve"><value>Open AI Assistant</value></data>
+  <data name="Copilot_FabLabel" xml:space="preserve"><value>Assistant</value></data>
+  <data name="Copilot_PanelTitle" xml:space="preserve"><value>Unified AI Assistant</value></data>
+  <data name="Copilot_PanelSubtitle" xml:space="preserve"><value>Shortcuts · Search · Navigate · Insights · Voice</value></data>
+  <data name="Copilot_CloseAria" xml:space="preserve"><value>Close AI Assistant</value></data>
+  <data name="Copilot_QuickAria" xml:space="preserve"><value>Quick phrases toolbar</value></data>
+  <data name="Copilot_QuickLabel" xml:space="preserve"><value>Shortcuts:</value></data>
+  <data name="Copilot_Msg_Summary7" xml:space="preserve"><value>Summary for last 7 days</value></data>
+  <data name="Copilot_Msg_SummarySaudi" xml:space="preserve"><value>Summary — Saudi plates, 7 days</value></data>
+  <data name="Copilot_Msg_SummaryTaxi" xml:space="preserve"><value>Summary — all taxis, 7 days</value></data>
+  <data name="Copilot_Msg_OpenDevice57" xml:space="preserve"><value>Open device #57</value></data>
+  <data name="Copilot_Msg_OpenAllDevices" xml:space="preserve"><value>Open all devices</value></data>
+  <data name="Copilot_Msg_SummaryPlateTemplate" xml:space="preserve"><value>Plate summary containing text ***</value></data>
+  <data name="Copilot_Msg_PlatePlaceholderHint" xml:space="preserve"><value>Replace *** with the plate fragment.</value></data>
+  <data name="Copilot_Msg_DemoPlateInvestigate" xml:space="preserve"><value>Investigate plate 668928</value></data>
+  <data name="Copilot_InputPlaceholder" xml:space="preserve"><value>Try: insights · open devices · find QTR-051 taxi · last 24 hours…</value></data>
+  <data name="Copilot_VoiceInputTitle" xml:space="preserve"><value>Voice input</value></data>
+  <data name="Copilot_Send" xml:space="preserve"><value>Send</value></data>
+
+  <!-- Search — toolbar -->
+  <data name="Search_InvestigationModeHint" xml:space="preserve"><value>Investigation search</value></data>
+  <data name="Search_PlatformPlaceholder" xml:space="preserve"><value>Search plate, vehicle, zone or case identifier…</value></data>
+  <data name="Search_VoiceSearchAria" xml:space="preserve"><value>Voice search</value></data>
+  <data name="Search_SubmitSearch" xml:space="preserve"><value>Search</value></data>
+  <data name="Search_ResetFilters" xml:space="preserve"><value>Clear filters</value></data>
+  <data name="Search_Filters" xml:space="preserve"><value>Filters</value></data>
+  <data name="Search_VoiceStatusIdle" xml:space="preserve"><value>Voice input idle</value></data>
+  <data name="Search_LabelPlateType" xml:space="preserve"><value>Plate type</value></data>
+  <data name="Search_LabelCountry" xml:space="preserve"><value>Country</value></data>
+  <data name="Search_LabelTimeWindow" xml:space="preserve"><value>Time window</value></data>
+  <data name="Search_LabelDevice" xml:space="preserve"><value>Device</value></data>
+  <data name="Search_LabelIncidentScope" xml:space="preserve"><value>Incident scope</value></data>
+  <data name="Search_AllCountries" xml:space="preserve"><value>All</value></data>
+  <data name="Search_AlertsOnly" xml:space="preserve"><value>Alerts only</value></data>
+  <data name="Search_SpeedViolationOnlyFmt" xml:space="preserve"><value>Speed breaches only (≥120 km/h)</value></data>
+  <data name="Search_MapViewTab" xml:space="preserve"><value>Map</value></data>
+  <data name="Search_CardViewTab" xml:space="preserve"><value>Cards</value></data>
+  <data name="Search_ListViewTab" xml:space="preserve"><value>List</value></data>
+  <data name="Search_Window_Last24Hours" xml:space="preserve"><value>Last 24 hours</value></data>
+  <data name="Search_Window_Last48Hours" xml:space="preserve"><value>Last 48 hours</value></data>
+  <data name="Search_Window_Today" xml:space="preserve"><value>Today</value></data>
+  <data name="Search_Window_Last7Days" xml:space="preserve"><value>Last seven days</value></data>
+
+  <!-- Search — labels used in cards -->
+  <data name="Enum_Vehicle_Sedan" xml:space="preserve"><value>Sedan</value></data>
+  <data name="Enum_Vehicle_Suv" xml:space="preserve"><value>SUV</value></data>
+  <data name="Enum_Vehicle_Pickup" xml:space="preserve"><value>Pickup</value></data>
+  <data name="Enum_Vehicle_Bus" xml:space="preserve"><value>Bus</value></data>
+  <data name="Enum_Vehicle_Truck" xml:space="preserve"><value>Truck</value></data>
+  <data name="Dash_EmDash" xml:space="preserve"><value>—</value></data>
+  <data name="PlateType_Private" xml:space="preserve"><value>Private</value></data>
+  <data name="PlateType_Commercial" xml:space="preserve"><value>Commercial</value></data>
+  <data name="PlateType_Government" xml:space="preserve"><value>Government</value></data>
+  <data name="PlateType_Transport" xml:space="preserve"><value>Transport</value></data>
+  <data name="PlateType_Taxi" xml:space="preserve"><value>Taxi</value></data>
+  <data name="Country_Qatar" xml:space="preserve"><value>Qatar</value></data>
+  <data name="Country_UAE" xml:space="preserve"><value>United Arab Emirates</value></data>
+  <data name="Country_Ksa" xml:space="preserve"><value>Saudi Arabia</value></data>
+  <data name="Country_Oman" xml:space="preserve"><value>Oman</value></data>
+
+  <!-- Search summaries -->
+  <data name="Search_FleetWideScopeLabel" xml:space="preserve"><value>Network-wide lens</value></data>
+  <data name="Search_TransStatus_Cleared" xml:space="preserve"><value>Cleared</value></data>
+  <data name="Search_TransStatus_UnderReview" xml:space="preserve"><value>Under review</value></data>
+  <data name="Search_TransStatus_Violation" xml:space="preserve"><value>Violation</value></data>
+  <data name="Search_Risk_High" xml:space="preserve"><value>High-risk</value></data>
+  <data name="Search_Risk_Low" xml:space="preserve"><value>Standard</value></data>
+
+  <data name="Search_ResultView_Map" xml:space="preserve"><value>Map view</value></data>
+  <data name="Search_ResultView_Card" xml:space="preserve"><value>Card view</value></data>
+  <data name="Search_ResultView_List" xml:space="preserve"><value>List view</value></data>
+  <data name="Search_TimeWindow_Last7DaysShort" xml:space="preserve"><value>Seven days</value></data>
+
+  <!-- Search — card / inside summary reuse -->
+  <data name="Search_Kpi_Class" xml:space="preserve"><value>Classification</value></data>
+  <data name="Search_Kpi_Origin" xml:space="preserve"><value>Plate origin</value></data>
+  <data name="Search_Kpi_Flags" xml:space="preserve"><value>Indicators</value></data>
+  <data name="Search_Pill_AlertDetection" xml:space="preserve"><value>Alert read</value></data>
+  <data name="Search_Pill_HighSpeed" xml:space="preserve"><value>High speed</value></data>
+  <data name="Search_Pill_AnprRead" xml:space="preserve"><value>ANPR read</value></data>
+  <data name="Search_Alt_Frame" xml:space="preserve"><value>Detection frame snapshot</value></data>
+  <data name="Search_Btn_ViewOnMap" xml:space="preserve"><value>Focus on map</value></data>
+  <data name="Search_Btn_AddToCase" xml:space="preserve"><value>Add to case file</value></data>
+  <data name="Search_Btn_LiveTrack" xml:space="preserve"><value>Live track</value></data>
+  <data name="Search_CapturedFmt" xml:space="preserve"><value>Captured {0} · Speed {1} · Status code {2}</value></data>
+  <data name="Search_ResultSummaryFmt" xml:space="preserve"><value>{0} results · {1} · {2}</value></data>
+  <data name="Search_PageOfPages" xml:space="preserve"><value>Page {0} / {1}</value></data>
+  <data name="Search_PreviousPage" xml:space="preserve"><value>Previous</value></data>
+  <data name="Search_NextPage" xml:space="preserve"><value>Next</value></data>
+  <data name="Search_DevicePrefix" xml:space="preserve"><value>Device {0}</value></data>
+  <data name="Search_SummaryInsightsLabel" xml:space="preserve"><value>Insights</value></data>
+  <data name="Search_SummaryBriefTitle" xml:space="preserve"><value>Operational brief</value></data>
+
+  <!-- Forensic demos -->
+  <data name="Forensic_Tab_GhostPlates" xml:space="preserve"><value>Ghost plates</value></data>
+  <data name="Forensic_Tab_Convoy" xml:space="preserve"><value>Convoy clustering</value></data>
+  <data name="Forensic_Tab_Tags" xml:space="preserve"><value>Behaviour tags</value></data>
+  <data name="Forensic_Ghost_Title" xml:space="preserve"><value>Plate spoofing analysis</value></data>
+  <data name="Forensic_Ghost_Body" xml:space="preserve"><value>Illustrative detections highlight plates sampled at geographically inconsistent intervals—often consistent with swaps or spoofing attempts.</value></data>
+  <data name="Forensic_Critical" xml:space="preserve"><value>Critical</value></data>
+  <data name="Forensic_DetectionN" xml:space="preserve"><value>Observation {0}</value></data>
+  <data name="Forensic_Ghost_Distance" xml:space="preserve"><value>Spatial gap</value></data>
+  <data name="Forensic_Ghost_TimeDiff" xml:space="preserve"><value>Temporal gap</value></data>
+  <data name="Forensic_Ghost_RequiredSpeed" xml:space="preserve"><value>Inferred sustained speed</value></data>
+  <data name="Forensic_Action_ViewVehicle" xml:space="preserve"><value>Open vehicle dossier</value></data>
+  <data name="Forensic_Action_Investigate" xml:space="preserve"><value>Escalate</value></data>
+  <data name="Forensic_Convoy_Title" xml:space="preserve"><value>Escort / convoy patterning</value></data>
+  <data name="Forensic_Convoy_Body" xml:space="preserve"><value>Demonstration convoys group vehicles exhibiting aligned routes and proximity.</value></data>
+  <data name="Forensic_Convoy_VehiclesFmt" xml:space="preserve"><value>{0} plate groups</value></data>
+  <data name="Forensic_Convoy_OccFmt" xml:space="preserve"><value>{0} linked observations</value></data>
+  <data name="Forensic_Convoy_Active" xml:space="preserve"><value>Open</value></data>
+  <data name="Forensic_Convoy_View" xml:space="preserve"><value>Reveal</value></data>
+  <data name="Forensic_Convoy_FirstFmt" xml:space="preserve"><value>First: {0}</value></data>
+  <data name="Forensic_Convoy_LastFmt" xml:space="preserve"><value>Latest: {0}</value></data>
+  <data name="Forensic_Tags_Title" xml:space="preserve"><value>AI behavioural tagging</value></data>
+  <data name="Forensic_Tags_Body" xml:space="preserve"><value>Demonstration tagging summarises illustrative vehicles with synthetic risk strata.</value></data>
+  <data name="Forensic_Tags_ChartHeading" xml:space="preserve"><value>Behaviour tag mix</value></data>
+  <data name="Forensic_Tags_FlaggedHeadingFmt" xml:space="preserve"><value>Watchlisted vehicles ({0})</value></data>
+  <data name="Forensic_Watchlisted" xml:space="preserve"><value>Monitoring</value></data>
+  <data name="Forensic_Kpi_Class" xml:space="preserve"><value>Body style</value></data>
+  <data name="Forensic_Kpi_Origin" xml:space="preserve"><value>Plate origin</value></data>
+  <data name="Forensic_Kpi_Violations" xml:space="preserve"><value>Violations count</value></data>
+  <data name="Forensic_RiskLabel_High" xml:space="preserve"><value>Elevated</value></data>
+  <data name="Forensic_RiskLabel_Medium" xml:space="preserve"><value>Elevated (medium)</value></data>
+  <data name="Forensic_RiskLabel_Low" xml:space="preserve"><value>Routine</value></data>
+
+  <!-- Forensic tag vocab (chart + chips) -->
+  <data name="ForensicTag_FrequentViolator" xml:space="preserve"><value>Repeat violator</value></data>
+  <data name="ForensicTag_NightCrawler" xml:space="preserve"><value>Late-hours movement</value></data>
+  <data name="ForensicTag_ZoneTrespasser" xml:space="preserve"><value>Zonal variance</value></data>
+  <data name="ForensicTag_PlateSwapper" xml:space="preserve"><value>Suspected plate swap</value></data>
+  <data name="ForensicTag_CleanRecord" xml:space="preserve"><value>Neutral history</value></data>
+  <data name="ForensicTag_CoTravelPattern" xml:space="preserve"><value>Paired-route pattern</value></data>
+
+  <data name="Search_List_Header_Plate" xml:space="preserve"><value>Plate</value></data>
+  <data name="Search_List_Header_Device" xml:space="preserve"><value>Reading device</value></data>
+  <data name="Search_List_Header_Speed" xml:space="preserve"><value>Recorded speed</value></data>
+  <data name="Search_List_Header_Status" xml:space="preserve"><value>Workflow status</value></data>
+  <data name="Search_List_Header_Alert" xml:space="preserve"><value>Alert</value></data>
+  <data name="Search_List_Header_Captured" xml:space="preserve"><value>Captured timestamp</value></data>
+  <data name="Search_List_Header_Vehicle" xml:space="preserve"><value>Vehicle</value></data>
+  <data name="Search_List_ActionsAria" xml:space="preserve"><value>Available actions</value></data>
+  <data name="Search_List_UnknownPlate" xml:space="preserve"><value>Unknown plate</value></data>
+  <data name="MapPopup_RiskHigh" xml:space="preserve"><value>High-risk</value></data>
+  <data name="MapPopup_RiskStandard" xml:space="preserve"><value>Standard lane</value></data>
+  <data name="MapPopup_LiveTrack" xml:space="preserve"><value>Live tracking</value></data>
+  <data name="MapPopup_ViewOnMap" xml:space="preserve"><value>Focus map</value></data>
+  <data name="MapPopup_AddCase" xml:space="preserve"><value>Create case artefact</value></data>
+  <data name="MapPopup_Previous" xml:space="preserve"><value>Back</value></data>
+  <data name="MapPopup_Next" xml:space="preserve"><value>Forward</value></data>
+  <data name="MapPopup_AlertRead" xml:space="preserve"><value>Alert read</value></data>
+  <data name="MapPopup_LineCapturedFmt" xml:space="preserve"><value>Recorded {0} · Speed {1} · Status {2}</value></data>
+
+  <!-- JavaScript/UI chrome -->
+  <data name="Js_CopilotThinking" xml:space="preserve"><value>Thinking…</value></data>
+  <data name="Js_CopilotServiceUnreachable" xml:space="preserve"><value>Unable to reach the AI Assistant service — please verify connectivity.</value></data>
+  <data name="Js_CopilotMicUnavailable" xml:space="preserve"><value>Voice capture unavailable.</value></data>
+  <data name="Js_CopilotMicListening" xml:space="preserve"><value>Listening…</value></data>
+  <data name="Js_CopilotMicBusy" xml:space="preserve"><value>Microphone busy — retry shortly.</value></data>
+  <data name="Js_CopilotWelcome" xml:space="preserve"><value>**Assistant ready.** Shortcut chips wipe the transcript, drop text into the box — edit freely, tap **Send**. Try **insights**, **open all devices**, **summary for seven days**, or **investigate plate number …**.</value></data>
+  <data name="Js_SearchVoiceListening" xml:space="preserve"><value>Listening…</value></data>
+  <data name="Js_SearchVoiceHeardFmt" xml:space="preserve"><value>Recognised "{0}" — parsing…</value></data>
+  <data name="Js_SearchVoiceError" xml:space="preserve"><value>Speech capture failed — retry.</value></data>
+  <data name="Js_SearchVoiceUnsupportedTitle" xml:space="preserve"><value>Voice inputs unsupported in this browser.</value></data>
+  <data name="Js_SearchTTS" xml:space="preserve"><value>Read aloud summary</value></data>
+  <data name="Js_SearchTTSStop" xml:space="preserve"><value>Stop playback</value></data>
+  <data name="Js_SearchTTSUnsupportedTitle" xml:space="preserve"><value>Speech synthesis unsupported here.</value></data>
+  <data name="Js_SearchPieTooltipFmt" xml:space="preserve"><value>{0}: {1} ({2}%)</value></data>
+  <data name="Js_MapStartTracking" xml:space="preserve"><value>Start tracking</value></data>
+  <data name="Js_MapStopTracking" xml:space="preserve"><value>Stop tracking</value></data>
+  <data name="Js_MapClearTracking" xml:space="preserve"><value>Clear tracking</value></data>
+
+  <data name="PageSubtitle_AIAnomalies" xml:space="preserve"><value>AI-powered anomaly detection and behavioural analysis.</value></data>
+  <data name="Forensic_Convoy_CardTitleFmt" xml:space="preserve"><value>{0} — {1} vehicles</value></data>
+  <data name="Forensic_Convoy_DateRangeFmt" xml:space="preserve"><value>First observed {0} · Last observed {1}</value></data>
+
+  <data name="Search_SidebarAria" xml:space="preserve"><value>Summary and charts</value></data>
+  <data name="Search_InsideSummaryHeading" xml:space="preserve"><value>Inside summary</value></data>
+  <data name="Search_SummaryCardAria" xml:space="preserve"><value>Incident summary narrative</value></data>
+  <data name="Search_IntelBriefTitle" xml:space="preserve"><value>Intelligence brief</value></data>
+  <data name="Search_KpiTotalReads" xml:space="preserve"><value>Total reads</value></data>
+  <data name="Search_KpiDistinctPlates" xml:space="preserve"><value>Distinct plates</value></data>
+  <data name="Search_KpiAlertsCount" xml:space="preserve"><value>Alerts</value></data>
+  <data name="Search_Highlights" xml:space="preserve"><value>Highlights</value></data>
+  <data name="Search_GenerateCaseFile" xml:space="preserve"><value>Generate case file</value></data>
+  <data name="Search_InvestigationBadge" xml:space="preserve"><value>Investigation</value></data>
+  <data name="Search_DeviceGeneric" xml:space="preserve"><value>Device</value></data>
+  <data name="Search_Sidebar_VehicleClass" xml:space="preserve"><value>Vehicle classification</value></data>
+  <data name="Search_Inv_LiveTrackingTitle" xml:space="preserve"><value>Live tracking</value></data>
+  <data name="Search_Inv_LiveTrackingSubFmt" xml:space="preserve"><value>Simulated radius around last detection · {0}</value></data>
+  <data name="Search_Inv_HistoricalTitle" xml:space="preserve"><value>Historical tracking</value></data>
+  <data name="Search_Inv_HistoricalSubFmt" xml:space="preserve"><value>Ordered sightings · plate {0}</value></data>
+  <data name="Search_Inv_HistoricalEmpty" xml:space="preserve"><value>No timeline rows yet. Run a plate search to populate this trail.</value></data>
+  <data name="Search_Inv_CoTravelTitle" xml:space="preserve"><value>Co-travel vehicles</value></data>
+  <data name="Search_Inv_CoTravelSub" xml:space="preserve"><value>Same time window · proximity heuristic</value></data>
+  <data name="Search_Inv_CoTravelDemoNote" xml:space="preserve"><value>Illustrative matches only (no live co-travel feed for this scope).</value></data>
+  <data name="Search_Inv_CoTravelDemoLine1" xml:space="preserve"><value>45231 S · two reads · ~4 minute overlap</value></data>
+  <data name="Search_Inv_CoTravelDemoLine2" xml:space="preserve"><value>78102 K · adjacent corridor · Lusail</value></data>
+  <data name="Search_Inv_CoTravelDemoLine3" xml:space="preserve"><value>30988 M · parallel lane · West Bay</value></data>
+  <data name="Search_Inv_CidTitle" xml:space="preserve"><value>CID / wanted posture</value></data>
+  <data name="Search_Inv_CidSub" xml:space="preserve"><value>Flag intelligence · risk estimate</value></data>
+  <data name="Search_Inv_FlagStatus" xml:space="preserve"><value>Flag status</value></data>
+  <data name="Search_Inv_RiskScore" xml:space="preserve"><value>Risk score</value></data>
+  <data name="Search_Inv_FinesTitle" xml:space="preserve"><value>Traffic fines ledger</value></data>
+  <data name="Search_Inv_FinesSub" xml:space="preserve"><value>Linked violations · estimated liability</value></data>
+  <data name="Search_Inv_FinesFootDemo" xml:space="preserve"><value>Latest ticket on file: 2 days ago (demo).</value></data>
+  <data name="Search_Inv_OwnerTitle" xml:space="preserve"><value>Owner intelligence</value></data>
+  <data name="Search_Inv_OwnerSub" xml:space="preserve"><value>Registry snapshot · licence points balance</value></data>
+  <data name="Search_Inv_RegParty" xml:space="preserve"><value>Registered party</value></data>
+  <data name="Search_Inv_LicensePoints" xml:space="preserve"><value>Licence points</value></data>
+  <data name="Dash_EnDash" xml:space="preserve"><value>—</value></data>
+  <data name="Dash_NotAvailableShort" xml:space="preserve"><value>n/a</value></data>
+
+  <data name="Poc_PageTitleHeading" xml:space="preserve"><value>Simulate vehicle path</value></data>
+  <data name="Poc_LabelCapturedDateUtc" xml:space="preserve"><value>Captured date (UTC)</value></data>
+  <data name="Poc_LabelPlateText" xml:space="preserve"><value>Plate text</value></data>
+  <data name="Poc_LabelPlateTypeOption" xml:space="preserve"><value>Plate type</value></data>
+  <data name="Poc_LabelCountryOption" xml:space="preserve"><value>Plate country</value></data>
+  <data name="Poc_PageIntroParagraph" xml:space="preserve"><value>Define plate metadata and captured date (UTC), then build an ordered list of ANPR cameras. Each camera receives one insertion with timestamps increasing along the path; only the calendar date is taken from your selection while hop timing is preserved.</value></data>
+  <data name="Poc_SavedPathsLabel" xml:space="preserve"><value>Saved paths</value></data>
+  <data name="Poc_SelectSavedPath" xml:space="preserve"><value>— Select a saved path —</value></data>
+  <data name="Poc_CameraCountFmt" xml:space="preserve"><value>{0} cameras</value></data>
+  <data name="Poc_LoadPathTooltip" xml:space="preserve"><value>Replace current selection</value></data>
+  <data name="Poc_LoadPath" xml:space="preserve"><value>Load path</value></data>
+  <data name="Poc_ResetViewTooltip" xml:space="preserve"><value>Clear route identifier from URL</value></data>
+  <data name="Poc_ResetView" xml:space="preserve"><value>Reset view</value></data>
+  <data name="Poc_LabelCameraPathOrdered" xml:space="preserve"><value>Camera path (order = travel)</value></data>
+  <data name="Poc_SelectCameraToAdd" xml:space="preserve"><value>— Select camera to add —</value></data>
+  <data name="Poc_AddToPath" xml:space="preserve"><value>Add to path</value></data>
+  <data name="Poc_ClearPath" xml:space="preserve"><value>Clear</value></data>
+  <data name="Poc_ClearPathTooltip" xml:space="preserve"><value>Clear path list</value></data>
+  <data name="Poc_NoCamerasInPath" xml:space="preserve"><value>No cameras in path yet.</value></data>
+  <data name="Poc_DateUtcHelp" xml:space="preserve"><value>Replaces only the date on captured timestamps; intra-path deltas stay unchanged.</value></data>
+  <data name="Poc_PlaceholderPlateExample" xml:space="preserve"><value>e.g. Q123456</value></data>
+  <data name="Poc_SavePathSectionTitle" xml:space="preserve"><value>Save current path</value></data>
+  <data name="Poc_LabelPathName" xml:space="preserve"><value>Path name</value></data>
+  <data name="Poc_PlaceholderPathName" xml:space="preserve"><value>e.g. West Bay loop</value></data>
+  <data name="Poc_SavePathButton" xml:space="preserve"><value>Save path</value></data>
+  <data name="Poc_AlertLastOnlyLabel" xml:space="preserve"><value>Raise alert on the final camera read only.</value></data>
+  <data name="Poc_SpeedViolationLastLabel" xml:space="preserve"><value>Apply speed breach (≥120 km/h) on the final camera only.</value></data>
+  <data name="Poc_InsertAlongPathButton" xml:space="preserve"><value>Insert transactions along path</value></data>
+  <data name="Poc_OpenSearch24h" xml:space="preserve"><value>Open search (last 24h)</value></data>
+  <data name="Poc_Err_NameRequired" xml:space="preserve"><value>Name the path before saving.</value></data>
+  <data name="Poc_Err_MinOneCameraSave" xml:space="preserve"><value>Add at least one camera before saving.</value></data>
+  <data name="Poc_Err_NameLength" xml:space="preserve"><value>Names must stay within 120 characters.</value></data>
+  <data name="Poc_Err_AddCameraPathGenerate" xml:space="preserve"><value>Add cameras to the ordered path.</value></data>
+  <data name="Poc_Success_SavedFmt" xml:space="preserve"><value>Saved "{0}" with {1} cameras.</value></data>
+  <data name="Poc_Success_InsertedFmt" xml:space="preserve"><value>Inserted {0} transaction(s) for "{1}" on {2} (UTC) along {3} camera(s).</value></data>
+  <data name="Poc_DeviceNumberFmt" xml:space="preserve"><value>Device #{0}</value></data>
+  <data name="Poc_ButtonMoveUp" xml:space="preserve"><value>Move up</value></data>
+  <data name="Poc_ButtonMoveDown" xml:space="preserve"><value>Move down</value></data>
+  <data name="Poc_ButtonRemove" xml:space="preserve"><value>Remove</value></data>
+
+  <data name="Copilot_ReplyEmpty" xml:space="preserve"><value>Ask something, trigger a search, or type **help** for examples.</value></data>
+  <data name="Copilot_ReplyGreeting" xml:space="preserve"><value>Hello — SmartTraffic Co-Pilot. I launch searches with filters, open modules, or summarise anomalies. Try **insights** or **find plate QTR‑051**.</value></data>
+  <data name="Copilot_ReplyUnknown" xml:space="preserve"><value>That phrase is not mapped yet. Say **devices**, **insights**, **search**, or cite a plate. Type **help** for more guidance.</value></data>
+  <data name="Copilot_HelpMarkdown" xml:space="preserve"><value>**Search:** plate text (`QTR-051`), descriptors such as taxi, Qatar, window hints (24 h, seven days).\n**Navigation:** “devices”, **open device 57**, “search hub”, Traffic Monitoring Hub, analytics.\n**Insights:** anomalies, summaries, “seven day insight”. English trigger words stay deliberate for interoperability.</value></data>
+  <data name="Copilot_WidgetHeadingTryThese" xml:space="preserve"><value>Shortcuts</value></data>
+  <data name="Copilot_CardSearchExample" xml:space="preserve"><value>find taxi Qatar last day</value></data>
+  <data name="Copilot_CardNavigateExample" xml:space="preserve"><value>open forensic search</value></data>
+  <data name="Copilot_CardAnalyzeExample" xml:space="preserve"><value>summary of commercial UAE today</value></data>
+  <data name="Copilot_OpenFmt" xml:space="preserve"><value>Opening **{0}**.</value></data>
+  <data name="Copilot_OpenTrafficHubFmt" xml:space="preserve"><value>Opening the **{0}**.</value></data>
+  <data name="Copilot_OpenCasesFmt" xml:space="preserve"><value>Opening **{0}** dossiers.</value></data>
+  <data name="Copilot_DeviceDetailReplyFmt" xml:space="preserve"><value>Opening **device #{0}** in Device Management.</value></data>
+  <data name="Copilot_ActionOpenDeviceFmt" xml:space="preserve"><value>Open device {0}</value></data>
+  <data name="Copilot_Devices_IndexLabel" xml:space="preserve"><value>All devices</value></data>
+  <data name="Copilot_SearchRunningFmt" xml:space="preserve"><value>Running search {0}. Showing map view.</value></data>
+  <data name="Copilot_Action_OpenSearchResults" xml:space="preserve"><value>Show search hits</value></data>
+  <data name="Copilot_DescribeTypeFmt" xml:space="preserve"><value>type {0}</value></data>
+  <data name="Copilot_DescribeWindowFmt" xml:space="preserve"><value>window {0}</value></data>
+  <data name="Copilot_QueryBroadScope" xml:space="preserve"><value>wide scope</value></data>
+  <data name="Copilot_Time_Last24Hours" xml:space="preserve"><value>last 24 hours</value></data>
+  <data name="Copilot_Time_TodayUtcDay" xml:space="preserve"><value>today UTC</value></data>
+  <data name="Copilot_Time_Last7Days" xml:space="preserve"><value>last 7 days</value></data>
+  <data name="Copilot_Insight_CountryFmt" xml:space="preserve"><value>**{0}**</value></data>
+  <data name="Copilot_Insight_TypesFmt" xml:space="preserve"><value>types **{0}**</value></data>
+  <data name="Copilot_Insight_PlateFmt" xml:space="preserve"><value>plate **{0}**</value></data>
+  <data name="Copilot_Insight_Plates_Header" xml:space="preserve"><value>Plate</value></data>
+  <data name="Copilot_Insight_Hits_Header" xml:space="preserve"><value>Hits</value></data>
+  <data name="Copilot_InsightsEmptyReplyFmt" xml:space="preserve"><value>**Assistant insights ({0}) —** no readings in-window. Widen timeframe or loosen filters.</value></data>
+  <data name="Copilot_InsightsReplyFmt" xml:space="preserve"><value>**Assistant insights ({0}) —** **{1}** detections · **{2}** alerted. {3}</value></data>
+  <data name="Copilot_AlertNoteHigh" xml:space="preserve"><value>Alert share is unusually high.</value></data>
+  <data name="Copilot_AlertNoteMedium" xml:space="preserve"><value>Elevated alert activity — watch corridors.</value></data>
+  <data name="Copilot_AlertNoteLow" xml:space="preserve"><value>Alert mix looks nominal.</value></data>
+  <data name="Copilot_WidgetPulseNoDetections" xml:space="preserve"><value>No qualifying hits</value></data>
+  <data name="Copilot_WidgetPulseScoped" xml:space="preserve"><value>Scoped pulse</value></data>
+  <data name="Copilot_WidgetLabelDetections" xml:space="preserve"><value>Detections</value></data>
+  <data name="Copilot_WidgetLabelAlerts" xml:space="preserve"><value>Alerts</value></data>
+  <data name="Copilot_WidgetDevicesOnlineLabel" xml:space="preserve"><value>Devices online</value></data>
+  <data name="Copilot_DevicesOfflineHintFmt" xml:space="preserve"><value>{0} offline (fleet-wide)</value></data>
+  <data name="Copilot_AlertPctHintFmt" xml:space="preserve"><value>{0}% share</value></data>
+  <data name="Copilot_ChartMixedPlateTypesScoped" xml:space="preserve"><value>Plate type mix · scoped window</value></data>
+  <data name="Copilot_SecondarySubtitlePlateKinds" xml:space="preserve"><value>Kinds (demo)</value></data>
+  <data name="Copilot_TableHotPlatesScoped" xml:space="preserve"><value>Most-seen plates</value></data>
+  <data name="Copilot_TableMatchedPlates" xml:space="preserve"><value>Matches for filter text</value></data>
+  <data name="Copilot_NoteNoRowsMatched" xml:space="preserve"><value>No ANPR readings match filters for this timeframe.</value></data>
+  <data name="Copilot_Action_ShowMatchingHits" xml:space="preserve"><value>Launch matching filter</value></data>
+  <data name="Copilot_Action_ShowDeviceAtlas" xml:space="preserve"><value>Device atlas</value></data>
+  <data name="Copilot_PlateKindOther" xml:space="preserve"><value>Other</value></data>
+  <data name="Copilot_HelpChipLabel_Search" xml:space="preserve"><value>Search</value></data>
+  <data name="Copilot_HelpChipLabel_Navigation" xml:space="preserve"><value>Navigation</value></data>
+  <data name="Copilot_HelpChipLabel_Analytics" xml:space="preserve"><value>Insights</value></data>
+</root>

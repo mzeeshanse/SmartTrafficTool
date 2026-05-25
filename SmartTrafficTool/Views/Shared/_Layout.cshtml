@@ -1,18 +1,29 @@
 @inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment WebHostEnvironment
 @inject Microsoft.Extensions.Configuration.IConfiguration LayoutConfiguration
+@using System.Globalization
+@{
+    var ui = CultureInfo.CurrentUICulture;
+    var isRtl = ui.TextInfo.IsRightToLeft;
+    var rtlClass = isRtl ? " rtl" : "";
+    var bootstrapCss = isRtl ? "bootstrap/dist/css/bootstrap.rtl.css" : "bootstrap/dist/css/bootstrap.css";
+    var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@ui.TwoLetterISOLanguageName" dir="@(isRtl ? "rtl" : "ltr")" data-bs-theme="dark">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - SmartTraffic AI</title>
+    <title>@ViewData["Title"] - @L["App_ProductName"]</title>
     <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Segoe+UI:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/lib/@bootstrapCss" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/SmartTrafficTool.styles.css" asp-append-version="true" />
 </head>
-<body class="app-body">
+<body class="app-body@rtlClass">
     @{
         var navController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
         bool NavActive(string name) => string.Equals(navController, name, StringComparison.OrdinalIgnoreCase);
@@ -22,48 +33,48 @@
             <div class="sidebar-header">
                 <div class="brand">
                     <div class="brand-mark">
-                        <img class="brand-mark__img" src="~/images/brand/moi-emblem.png" asp-append-version="true" width="36" height="36" alt="State of Qatar national emblem" />
+                        <img class="brand-mark__img" src="~/images/brand/moi-emblem.png" asp-append-version="true" width="36" height="36" alt="@L["Meta_AltNationalEmblem"]" />
                     </div>
                     <div class="brand-text">
-                        <div class="brand-title">Ministry of Interior</div>
-                        <div class="brand-subtitle">State of Qatar · Smart Traffic</div>
+                        <div class="brand-title">@L["Brand_MinistryTitle"]</div>
+                        <div class="brand-subtitle">@L["Brand_SubtitleLine"]</div>
                     </div>
                 </div>
-                <button class="btn btn-ghost sidebar-toggle" type="button" aria-expanded="false" aria-controls="appSidebar" title="Close menu">
-                    <i class="fa-solid fa-angles-left sidebar-toggle-icon" aria-hidden="true"></i>
+                <button class="btn btn-ghost sidebar-toggle" type="button" aria-expanded="false" aria-controls="appSidebar" title="@L["Topbar_CloseMenuTooltip"]">
+                    <i class="fa-solid fa-angles-left sidebar-toggle-icon sidebar-toggle-arrow" aria-hidden="true"></i>
                 </button>
             </div>
-            <nav class="nav flex-column sidebar-nav" aria-label="Main">
+            <nav class="nav flex-column sidebar-nav" aria-label="@L["Meta_MainNavAria"]">
                 <a class="nav-link@(NavActive("CommandAndControl") ? " active" : "")" asp-area="" asp-controller="CommandAndControl" asp-action="Index">
-                    <span class="nav-link-main"><span class="nav-link-icon"><i class="fa-solid fa-map-location-dot"></i></span><span class="nav-link-label">Traffic Monitoring Hub</span></span>
+                    <span class="nav-link-main"><span class="nav-link-icon"><i class="fa-solid fa-map-location-dot"></i></span><span class="nav-link-label">@L["Nav_TrafficMonitoringHub"]</span></span>
                     <span class="nav-link-chevron"><i class="fa-solid fa-chevron-right"></i></span>
                 </a>
                 <a class="nav-link@(NavActive("Search") ? " active" : "")" asp-area="" asp-controller="Search" asp-action="Index">
-                    <span class="nav-link-main"><span class="nav-link-icon"><i class="fa-solid fa-magnifying-glass"></i></span><span class="nav-link-label">AI Forensic Search</span></span>
+                    <span class="nav-link-main"><span class="nav-link-icon"><i class="fa-solid fa-magnifying-glass"></i></span><span class="nav-link-label">@L["Nav_AIForensicSearch"]</span></span>
                     <span class="nav-link-chevron"><i class="fa-solid fa-chevron-right"></i></span>
                 </a>
                 <a class="nav-link@(NavActive("Devices") ? " active" : "")" asp-area="" asp-controller="Devices" asp-action="Index">
-                    <span class="nav-link-main"><span class="nav-link-icon"><i class="fa-solid fa-camera"></i></span><span class="nav-link-label">Device Management</span></span>
+                    <span class="nav-link-main"><span class="nav-link-icon"><i class="fa-solid fa-camera"></i></span><span class="nav-link-label">@L["Nav_DeviceManagement"]</span></span>
                     <span class="nav-link-chevron"><i class="fa-solid fa-chevron-right"></i></span>
                 </a>
                 <a class="nav-link@(NavActive("ForensicAnalytics") ? " active" : "")" asp-area="" asp-controller="ForensicAnalytics" asp-action="Index">
-                    <span class="nav-link-main"><span class="nav-link-icon"><i class="fa-solid fa-chart-line"></i></span><span class="nav-link-label">AI Anomalies</span></span>
+                    <span class="nav-link-main"><span class="nav-link-icon"><i class="fa-solid fa-chart-line"></i></span><span class="nav-link-label">@L["Nav_AIAnomalies"]</span></span>
                     <span class="nav-link-chevron"><i class="fa-solid fa-chevron-right"></i></span>
                 </a>
                 @if (WebHostEnvironment.IsDevelopment() || LayoutConfiguration.GetValue<bool>("PocDemo:AllowAppendRecentData"))
                 {
                     <a class="nav-link@(NavActive("PocDemo") ? " active" : "") nav-link--poc" asp-area="" asp-controller="PocDemo" asp-action="Index">
-                        <span class="nav-link-main"><span class="nav-link-icon"><i class="fa-solid fa-road"></i></span><span class="nav-link-label">POC route simulator</span></span>
+                        <span class="nav-link-main"><span class="nav-link-icon"><i class="fa-solid fa-road"></i></span><span class="nav-link-label">@L["Nav_PocSimulator"]</span></span>
                         <span class="nav-link-chevron"><i class="fa-solid fa-chevron-right"></i></span>
                     </a>
                 }
             </nav>
             <div class="sidebar-footer">
                 <div class="login-card glass">
-                    <div class="login-label">Authenticated Session</div>
-                    <div class="login-user">Administrator</div>
-                    <div class="login-role">Traffic Ops Supervisor</div>
-                    <button class="btn btn-accent w-100 mt-2" type="button"><i class="fa-regular fa-id-badge me-2" aria-hidden="true"></i><span class="sidebar-profile-label">Open Profile</span></button>
+                    <div class="login-label">@L["Auth_SessionBanner"]</div>
+                    <div class="login-user">@L["Auth_Administrator"]</div>
+                    <div class="login-role">@L["Auth_TrafficOpsSupervisor"]</div>
+                    <button class="btn btn-accent w-100 mt-2" type="button"><i class="fa-regular fa-id-badge me-2" aria-hidden="true"></i><span class="sidebar-profile-label">@L["Auth_OpenProfile"]</span></button>
                 </div>
             </div>
         </aside>
@@ -71,25 +82,30 @@
         <div class="app-main">
             <header class="topbar glass">
                 <div class="topbar-left">
-                    <button type="button" class="btn btn-ghost topbar-menu-toggle" aria-label="Open navigation menu" title="Menu">
+                    <button type="button" class="btn btn-ghost topbar-menu-toggle" aria-label="@L["Topbar_OpenNavAria"]" title="@L["Topbar_OpenNavTooltip"]">
                         <i class="fa-solid fa-bars" aria-hidden="true"></i>
                     </button>
                     <div class="topbar-titles">
                         <div class="page-title">@ViewData["Title"]</div>
-                        <div class="page-subtitle">@(ViewData["PageSubtitle"] as string ?? "Search drives intelligence, map visualizes it.")</div>
+                        @{
+                            var sub = ViewData["PageSubtitle"] as string;
+                        }
+                        <div class="page-subtitle">@(string.IsNullOrWhiteSpace(sub) ? L["App_DefaultPageSubtitle"].Value : sub)</div>
                     </div>
                 </div>
                 <div class="topbar-right">
-                    <div class="lang-switcher">
-                        <button class="btn btn-ghost btn-sm" type="button"><i class="fa-solid fa-globe me-1"></i>EN</button>
-                        <button class="btn btn-ghost btn-sm" type="button"><i class="fa-solid fa-language me-1"></i>AR</button>
+                    <div class="lang-switcher" role="group" aria-label="@L["Topbar_LanguageSelect"]">
+                        <a class="btn btn-ghost btn-sm @(ui.Name.StartsWith("en", StringComparison.OrdinalIgnoreCase) ? "active" : null)"
+                           asp-controller="Culture" asp-action="SetCulture" asp-route-culture="en-QA" asp-route-returnUrl="@returnUrl">@L["Meta_Lang_En"]</a>
+                        <a class="btn btn-ghost btn-sm @(ui.Name.StartsWith("ar", StringComparison.OrdinalIgnoreCase) ? "active" : null)"
+                           asp-controller="Culture" asp-action="SetCulture" asp-route-culture="ar-QA" asp-route-returnUrl="@returnUrl">@L["Meta_Lang_Ar"]</a>
                     </div>
-                    <button class="btn btn-outline-warning btn-sm" type="button"><i class="fa-regular fa-bell me-1"></i>Alerts (3)</button>
+                    <button class="btn btn-outline-warning btn-sm" type="button"><i class="fa-regular fa-bell me-1"></i>@string.Format(CultureInfo.CurrentUICulture, L["Topbar_AlertsFmt"].Value, 3)</button>
                     <div class="profile-pill">
-                        <img src="https://placehold.co/48x48" alt="Profile" />
+                        <img src="https://placehold.co/48x48" alt="@L["Auth_Administrator"]" />
                         <div>
-                            <div class="profile-name">Administrator</div>
-                            <div class="profile-role">Ops Lead</div>
+                            <div class="profile-name">@L["Auth_Administrator"]</div>
+                            <div class="profile-role">@L["Auth_OpsLead"]</div>
                         </div>
                     </div>
                 </div>
@@ -100,11 +116,54 @@
             </main>
 
             <footer class="app-footer">
-                <div>© 2026 Smart Traffic — Secure Mobility Operations</div>
-                <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                <div>@L["Footer_CopyrightShort"]</div>
+                <a asp-area="" asp-controller="Home" asp-action="Privacy">@L["Footer_PrivacyLink"]</a>
             </footer>
         </div>
     </div>
+
+    @{
+        var i18n = new Dictionary<string, string?>
+        {
+            ["copilotThinking"] = L["Js_CopilotThinking"].Value,
+            ["copilotError"] = L["Js_CopilotServiceUnreachable"].Value,
+            ["copilotMicUnavailable"] = L["Js_CopilotMicUnavailable"].Value,
+            ["copilotMicListening"] = L["Js_CopilotMicListening"].Value,
+            ["copilotMicBusy"] = L["Js_CopilotMicBusy"].Value,
+            ["copilotWelcome"] = L["Js_CopilotWelcome"].Value,
+            ["searchVoiceListening"] = L["Js_SearchVoiceListening"].Value,
+            ["searchVoiceHeardFmt"] = L["Js_SearchVoiceHeardFmt"].Value,
+            ["searchVoiceError"] = L["Js_SearchVoiceError"].Value,
+            ["searchVoiceIdle"] = L["Search_VoiceStatusIdle"].Value,
+            ["searchMicUnsupportedTitle"] = L["Js_SearchVoiceUnsupportedTitle"].Value,
+            ["ttsButton"] = L["Js_SearchTTS"].Value,
+            ["ttsStopButton"] = L["Js_SearchTTSStop"].Value,
+            ["ttsUnsupported"] = L["Js_SearchTTSUnsupportedTitle"].Value,
+            ["mapRiskHigh"] = L["MapPopup_RiskHigh"].Value,
+            ["mapRiskStandard"] = L["MapPopup_RiskStandard"].Value,
+            ["mapLiveTrack"] = L["MapPopup_LiveTrack"].Value,
+            ["mapViewOnMap"] = L["MapPopup_ViewOnMap"].Value,
+            ["mapAddCase"] = L["MapPopup_AddCase"].Value,
+            ["mapPrev"] = L["MapPopup_Previous"].Value,
+            ["mapNext"] = L["MapPopup_Next"].Value,
+            ["mapAlertPill"] = L["MapPopup_AlertRead"].Value,
+            ["mapCapturedFmt"] = L["MapPopup_LineCapturedFmt"].Value,
+            ["pillHighSpeed"] = L["Search_Pill_HighSpeed"].Value,
+            ["pillAnpr"] = L["Search_Pill_AnprRead"].Value,
+            ["kpiClass"] = L["Search_Kpi_Class"].Value,
+            ["kpiOrigin"] = L["Search_Kpi_Origin"].Value,
+            ["kpiFlags"] = L["Search_Kpi_Flags"].Value,
+            ["chartPieTooltipFmt"] = L["Js_SearchPieTooltipFmt"].Value,
+            ["mapStartTracking"] = L["Js_MapStartTracking"].Value,
+            ["mapStopTracking"] = L["Js_MapStopTracking"].Value,
+            ["mapClearTracking"] = L["Js_MapClearTracking"].Value
+        };
+    }
+    <script>
+        window.smartTrafficCulture = @Html.Raw(JsonSerializer.Serialize(ui.Name));
+        window.smartTrafficIsRtl = @Html.Raw(JsonSerializer.Serialize(isRtl));
+        window.smartTrafficI18n = @Html.Raw(JsonSerializer.Serialize(i18n.Where(kv => !string.IsNullOrEmpty(kv.Value)).ToDictionary(kv => kv.Key, kv => kv.Value!)));
+    </script>
 
     <partial name="_CopilotPanel" />
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

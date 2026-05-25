@@ -30,7 +30,6 @@ public class SearchController : Controller
         string? view = "map",
         int page = 1)
     {
-        ViewData["Title"] = "AI Forensic Search";
         const int pageSize = 30;
         var safePage = page < 1 ? 1 : page;
 

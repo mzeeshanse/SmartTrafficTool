@@ -3,6 +3,12 @@
   if (!shell) return;
 
   const apiUrl = shell.dataset.apiUrl || "/api/Copilot/message";
+  const speechLang = shell.dataset.speechLang || "en-QA";
+  const i18n = window.smartTrafficI18n || {};
+  function t(key, fallback) {
+    var v = i18n[key];
+    return v || fallback || "";
+  }
   const fab = document.getElementById("copilot-fab");
   const panel = document.getElementById("copilot-panel");
   const backdrop = document.getElementById("copilot-backdrop");
@@ -269,7 +275,7 @@
 
     appendUserMessage(text);
     if (input) input.value = "";
-    setStatus("Thinking…");
+    setStatus(t("copilotThinking", "Thinking…"));
     if (sendBtn) sendBtn.disabled = true;
 
     try {
@@ -292,7 +298,7 @@
       }
     } catch (e) {
       appendAssistantMessage(
-        "I could not reach the Co-Pilot service. Check the network or try again.",
+        t("copilotError", "Unable to reach the AI Assistant — check the network."),
         [],
         []
       );
@@ -310,7 +316,7 @@
     recognition = new SR();
     recognition.continuous = false;
     recognition.interimResults = false;
-    recognition.lang = "en-US";
+    recognition.lang = speechLang.startsWith("ar") ? speechLang : "en-QA";
 
     recognition.onresult = function (ev) {
       const t = ev.results && ev.results[0] && ev.results[0][0] && ev.results[0][0].transcript;
@@ -323,7 +329,7 @@
 
     recognition.onerror = function () {
       micBtn.classList.remove("copilot-mic-listening");
-      setStatus("Voice input unavailable.");
+      setStatus(t("copilotMicUnavailable", "Voice capture unavailable."));
     };
 
     recognition.onend = function () {
@@ -333,11 +339,11 @@
     micBtn.addEventListener("click", function () {
       try {
         micBtn.classList.add("copilot-mic-listening");
-        setStatus("Listening…");
+        setStatus(t("copilotMicListening", "Listening…"));
         recognition.start();
       } catch {
         micBtn.classList.remove("copilot-mic-listening");
-        setStatus("Microphone busy — try again.");
+        setStatus(t("copilotMicBusy", "Microphone busy — try again."));
       }
     });
   }
@@ -375,7 +381,9 @@
 
   initSpeechRecognition();
 
-  const welcome =
-    "**Co-Pilot ready.** **Quick** chips clear the thread, fill the box below — edit if you like, then **Send**. Or type: **insights**, **open all devices**, **summary for 7 days**, **summary of plate with text …** (or **search plate with text …** — same insight), **investigate plate number …**.";
+  const welcome = t(
+    "copilotWelcome",
+    "**Assistant ready.** Shortcut chips wipe the transcript, populate the composer — tweak as needed and press **Send**."
+  );
   appendAssistantMessage(welcome, [], []);
 })();

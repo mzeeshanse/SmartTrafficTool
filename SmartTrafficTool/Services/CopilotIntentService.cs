@@ -1,6 +1,8 @@
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using SmartTrafficTool.Data;
 using SmartTrafficTool.Models;
 using SmartTrafficTool.ViewModels;
@@ -10,10 +12,12 @@ namespace SmartTrafficTool.Services;
 public class CopilotIntentService : ICopilotIntentService
 {
     private readonly AppDbContext _db;
+    private readonly IStringLocalizer<SharedResource> _t;
 
-    public CopilotIntentService(AppDbContext db)
+    public CopilotIntentService(AppDbContext db, IStringLocalizer<SharedResource> localizer)
     {
         _db = db;
+        _t = localizer;
     }
 
     public async Task<CopilotMessageResponse> ProcessAsync(string message, bool voiceInput, CancellationToken cancellationToken = default)
@@ -23,7 +27,7 @@ public class CopilotIntentService : ICopilotIntentService
         {
             return new CopilotMessageResponse
             {
-                Reply = "Ask a question, run a search, or say “help” for examples.",
+                Reply = _t["Copilot_ReplyEmpty"].Value,
                 Intent = "empty"
             };
         }
@@ -34,7 +38,7 @@ public class CopilotIntentService : ICopilotIntentService
         {
             return new CopilotMessageResponse
             {
-                Reply = "Hi — I’m your Central AI Co-Pilot. I can run forensic-style searches (plates + filters), open modules, and summarize anomalies. Try “insights” or “find plate QTR-051”.",
+                Reply = _t["Copilot_ReplyGreeting"].Value,
                 Intent = "greeting",
                 Speak = voiceInput
             };
@@ -83,7 +87,7 @@ public class CopilotIntentService : ICopilotIntentService
 
         return new CopilotMessageResponse
         {
-            Reply = "I couldn’t map that to a command yet. Try “open devices”, “insights”, or a plate like “QTR-072”. Say **help** for more.",
+            Reply = _t["Copilot_ReplyUnknown"].Value,
             Intent = "unknown",
             Speak = voiceInput
         };
@@ -93,26 +97,23 @@ public class CopilotIntentService : ICopilotIntentService
         lower is "hi" or "hello" or "hey" ||
         lower.StartsWith("hi ") || lower.StartsWith("hello ") || lower.StartsWith("hey ");
 
-    private static CopilotMessageResponse HelpResponse(bool voice)
+    private CopilotMessageResponse HelpResponse(bool voice)
     {
         return new CopilotMessageResponse
         {
-            Reply =
-                "**Search (same rules as AI Forensic Search):** plate regex `QTR-051`, filters like *taxi*, *Qatar*, *last 24 hours*.\n" +
-                "**Navigation:** “open device management”, **“open device 57”** / **“device number 57”**, “go to search”, “traffic monitoring hub”, **“analytics”**, **“launch analytics”**.\n" +
-                "**Insights:** “anomalies”, “7 days insights”, “24 hour insight”, “summary for 7 days”, “summary of plate with text ***”, “search plate with text …” (same insight), “insights Qatar last 24 hours”, “overview for plate QTR-051”.",
+            Reply = _t["Copilot_HelpMarkdown"].Value,
             Intent = "help",
             Widgets =
             [
                 new CopilotWidgetDto
                 {
                     Type = "cards",
-                    Title = "Try these",
+                    Title = _t["Copilot_WidgetHeadingTryThese"].Value,
                     Cards =
                     [
-                        new CopilotCardItemDto { Label = "Search", Value = "find taxi plates last 24 hours in Qatar" },
-                        new CopilotCardItemDto { Label = "Navigate", Value = "open forensic search" },
-                        new CopilotCardItemDto { Label = "Analyze", Value = "summary of commercial plates in UAE today" }
+                        new CopilotCardItemDto { Label = _t["Copilot_HelpChipLabel_Search"].Value, Value = _t["Copilot_CardSearchExample"].Value },
+                        new CopilotCardItemDto { Label = _t["Copilot_HelpChipLabel_Navigation"].Value, Value = _t["Copilot_CardNavigateExample"].Value },
+                        new CopilotCardItemDto { Label = _t["Copilot_HelpChipLabel_Analytics"].Value, Value = _t["Copilot_CardAnalyzeExample"].Value }
                     ]
                 }
             ],
@@ -120,7 +121,7 @@ public class CopilotIntentService : ICopilotIntentService
         };
     }
 
-    private static bool TryNavigate(string lower, out string href, out string label, out string reply)
+    private bool TryNavigate(string lower, out string href, out string label, out string reply)
     {
         href = "";
         label = "";
@@ -134,8 +135,8 @@ public class CopilotIntentService : ICopilotIntentService
             || navTrim.Equals("analytic", StringComparison.OrdinalIgnoreCase))
         {
             href = "/ForensicAnalytics";
-            label = "AI Anomalies";
-            reply = "Opening **AI Anomalies**.";
+            label = _t["Title_AIAnomalies"].Value;
+            reply = string.Format(CultureInfo.CurrentUICulture, _t["Copilot_OpenFmt"].Value, label);
             return true;
         }
 
@@ -151,8 +152,8 @@ public class CopilotIntentService : ICopilotIntentService
                 RegexOptions.IgnoreCase))
         {
             href = "/Devices";
-            label = "Open Device Management";
-            reply = "Opening **Device Management** — map, streams, and telemetry.";
+            label = _t["Title_DeviceManagement"].Value;
+            reply = string.Format(CultureInfo.CurrentUICulture, _t["Copilot_OpenFmt"].Value, label);
             return true;
         }
 
@@ -168,32 +169,33 @@ public class CopilotIntentService : ICopilotIntentService
             ))
         {
             href = "/CommandAndControl";
-            label = "Traffic Monitoring Hub";
-            reply = "Opening the **Traffic Monitoring Hub**.";
+            var hubTitle = _t["Title_TrafficMonitoringHub"].Value;
+            label = hubTitle;
+            reply = string.Format(CultureInfo.CurrentUICulture, _t["Copilot_OpenTrafficHubFmt"].Value, hubTitle);
             return true;
         }
 
         if (open && (lower.Contains("analytic") || lower.Contains("report") || Regex.IsMatch(lower, @"\bai\s+anomalies?\b")))
         {
             href = "/ForensicAnalytics";
-            label = "AI Anomalies";
-            reply = "Opening **AI Anomalies**.";
+            label = _t["Title_AIAnomalies"].Value;
+            reply = string.Format(CultureInfo.CurrentUICulture, _t["Copilot_OpenFmt"].Value, label);
             return true;
         }
 
         if (open && lower.Contains("case"))
         {
             href = "/Cases";
-            label = "Cases";
-            reply = "Opening **Cases**.";
+            label = _t["Title_Cases"].Value;
+            reply = string.Format(CultureInfo.CurrentUICulture, _t["Copilot_OpenCasesFmt"].Value, label);
             return true;
         }
 
         if ((open && lower.Contains("search") && !lower.Contains("for ")) || lower.Trim() is "search" or "forensic search")
         {
             href = "/Search";
-            label = "AI Forensic Search";
-            reply = "Opening **AI Forensic Search**.";
+            label = _t["Title_AIForensicSearch"].Value;
+            reply = string.Format(CultureInfo.CurrentUICulture, _t["Copilot_OpenFmt"].Value, label);
             return true;
         }
 
@@ -207,7 +209,7 @@ public class CopilotIntentService : ICopilotIntentService
     /// Opens a specific device on Device Management before search NLP runs — otherwise digit patterns (e.g. 57)
     /// are treated as forensic plate search by <see cref="CopilotNlp.ParseSearchQuery"/>.
     /// </summary>
-    private static bool TryOpenDeviceDetails(string raw, string lower, bool voice, out CopilotMessageResponse response)
+    private bool TryOpenDeviceDetails(string raw, string lower, bool voice, out CopilotMessageResponse response)
     {
         response = null!;
 
@@ -250,21 +252,21 @@ public class CopilotIntentService : ICopilotIntentService
         response = new CopilotMessageResponse
         {
             Reply =
-                $"Opening **device #{id}** in Device Management (details — map position, stream, and status).",
+                string.Format(CultureInfo.CurrentUICulture, _t["Copilot_DeviceDetailReplyFmt"].Value, id),
             Intent = "navigate_device",
             Actions =
             [
                 new CopilotActionDto
                 {
                     Type = "navigate",
-                    Label = $"Open device {id}",
+                    Label = string.Format(CultureInfo.CurrentUICulture, _t["Copilot_ActionOpenDeviceFmt"].Value, id),
                     Href = $"/Devices/Details/{id}",
                     Primary = true
                 },
                 new CopilotActionDto
                 {
                     Type = "navigate",
-                    Label = "All devices",
+                    Label = _t["Copilot_Devices_IndexLabel"].Value,
                     Href = "/Devices",
                     Primary = false
                 }
@@ -275,7 +277,7 @@ public class CopilotIntentService : ICopilotIntentService
         return true;
     }
 
-    private static bool TryBuildSearch(string raw, bool investigation, bool voice, out CopilotMessageResponse response)
+    private bool TryBuildSearch(string raw, bool investigation, bool voice, out CopilotMessageResponse response)
     {
         response = null!;
         var stripped = StripLeadPhrases(raw);
@@ -324,11 +326,11 @@ public class CopilotIntentService : ICopilotIntentService
         var human = DescribeParsedQuery(parsed);
         response = new CopilotMessageResponse
         {
-            Reply = $"Running a forensic-style search: {human}. Results open on the map view.",
+            Reply = string.Format(CultureInfo.CurrentUICulture, _t["Copilot_SearchRunningFmt"].Value, human),
             Intent = "search",
             Actions =
             [
-                new CopilotActionDto { Type = "navigate", Label = "Open search results", Href = path, Primary = true }
+                new CopilotActionDto { Type = "navigate", Label = _t["Copilot_Action_OpenSearchResults"].Value, Href = path, Primary = true }
             ],
             Speak = voice
         };
@@ -371,7 +373,7 @@ public class CopilotIntentService : ICopilotIntentService
         return t.Trim();
     }
 
-    private static string DescribeParsedQuery(CopilotNlp.ParsedSearchQuery p)
+    private string DescribeParsedQuery(CopilotNlp.ParsedSearchQuery p)
     {
         var parts = new List<string>();
         if (!string.IsNullOrWhiteSpace(p.QueryText))
@@ -381,7 +383,7 @@ public class CopilotIntentService : ICopilotIntentService
 
         if (!string.IsNullOrWhiteSpace(p.PlateType))
         {
-            parts.Add($"type {p.PlateType}");
+            parts.Add(string.Format(CultureInfo.CurrentUICulture, _t["Copilot_DescribeTypeFmt"].Value, p.PlateType));
         }
 
         if (!string.IsNullOrWhiteSpace(p.Country))
@@ -391,10 +393,10 @@ public class CopilotIntentService : ICopilotIntentService
 
         if (!string.IsNullOrWhiteSpace(p.Window))
         {
-            parts.Add($"window {p.Window}");
+            parts.Add(string.Format(CultureInfo.CurrentUICulture, _t["Copilot_DescribeWindowFmt"].Value, p.Window));
         }
 
-        return parts.Count > 0 ? string.Join(" · ", parts) : "broad scope";
+        return parts.Count > 0 ? string.Join(" · ", parts) : _t["Copilot_QueryBroadScope"].Value;
     }
 
     private static DateTime ResolveInsightSince(string? window)
@@ -423,24 +425,24 @@ public class CopilotIntentService : ICopilotIntentService
         return now.AddHours(-24);
     }
 
-    private static string DescribeInsightTimeLabel(string? window)
+    private string DescribeInsightTimeLabel(string? window)
     {
         if (string.IsNullOrWhiteSpace(window) || window.Equals("24h", StringComparison.OrdinalIgnoreCase))
         {
-            return "the last 24 hours";
+            return _t["Copilot_Time_Last24Hours"].Value;
         }
 
         if (window.Equals("today", StringComparison.OrdinalIgnoreCase))
         {
-            return "today (UTC day)";
+            return _t["Copilot_Time_TodayUtcDay"].Value;
         }
 
         if (window.Equals("7d", StringComparison.OrdinalIgnoreCase))
         {
-            return "the last 7 days";
+            return _t["Copilot_Time_Last7Days"].Value;
         }
 
-        return "the last 24 hours";
+        return _t["Copilot_Time_Last24Hours"].Value;
     }
 
     private static List<int> ResolvePlateTypeIds(string? plateTypeCsv)
@@ -518,22 +520,22 @@ public class CopilotIntentService : ICopilotIntentService
         return query;
     }
 
-    private static string DescribeInsightScope(CopilotNlp.ParsedSearchQuery p, string timeLabel)
+    private string DescribeInsightScope(CopilotNlp.ParsedSearchQuery p, string timeLabel)
     {
         var segments = new List<string>();
         if (!string.IsNullOrWhiteSpace(p.Country))
         {
-            segments.Add($"**{p.Country}**");
+            segments.Add(string.Format(CultureInfo.CurrentUICulture, _t["Copilot_Insight_CountryFmt"].Value, p.Country));
         }
 
         if (!string.IsNullOrWhiteSpace(p.PlateType))
         {
-            segments.Add($"types **{p.PlateType}**");
+            segments.Add(string.Format(CultureInfo.CurrentUICulture, _t["Copilot_Insight_TypesFmt"].Value, p.PlateType));
         }
 
         if (!string.IsNullOrWhiteSpace(p.QueryText))
         {
-            segments.Add($"plate text **{p.QueryText}**");
+            segments.Add(string.Format(CultureInfo.CurrentUICulture, _t["Copilot_Insight_PlateFmt"].Value, p.QueryText));
         }
 
         segments.Add(timeLabel);
@@ -601,19 +603,19 @@ public class CopilotIntentService : ICopilotIntentService
         var offlineDevices = await _db.Devices.CountAsync(d => d.Status == "Offline", ct);
 
         var anomalyNote = alertRate >= 18
-            ? "Alert ratio is elevated vs typical traffic — review flagged plates and device health."
+            ? _t["Copilot_AlertNoteHigh"].Value
             : alertRate >= 10
-                ? "Moderate alert activity — monitor repeat plates and corridor load."
-                : "Alert levels look stable for this window.";
+                ? _t["Copilot_AlertNoteMedium"].Value
+                : _t["Copilot_AlertNoteLow"].Value;
 
         var labels = typeMix.Select(t => t.TypeId switch
         {
-            1 => "Private",
-            2 => "Commercial",
-            3 => "Government",
-            4 => "Transport",
-            5 => "Taxi",
-            _ => "Other"
+            1 => _t["PlateType_Private"].Value,
+            2 => _t["PlateType_Commercial"].Value,
+            3 => _t["PlateType_Government"].Value,
+            4 => _t["PlateType_Transport"].Value,
+            5 => _t["PlateType_Taxi"].Value,
+            _ => _t["Copilot_PlateKindOther"].Value
         }).ToList();
 
         var data = typeMix.Select(t => t.C).ToList();
@@ -624,8 +626,8 @@ public class CopilotIntentService : ICopilotIntentService
 
         var scopeLine = DescribeInsightScope(parsed, timeLabel);
         var pulseTitle = total == 0
-            ? "No matching detections"
-            : "Scoped pulse";
+            ? _t["Copilot_WidgetPulseNoDetections"].Value
+            : _t["Copilot_WidgetPulseScoped"].Value;
 
         var widgets = new List<CopilotWidgetDto>
         {
@@ -635,9 +637,9 @@ public class CopilotIntentService : ICopilotIntentService
                 Title = pulseTitle,
                 Cards =
                 [
-                    new CopilotCardItemDto { Label = "Detections", Value = total.ToString("N0"), Hint = scopeLine },
-                    new CopilotCardItemDto { Label = "Alerts", Value = alerts.ToString("N0"), Hint = $"{alertRate}% of volume" },
-                    new CopilotCardItemDto { Label = "Devices online", Value = onlineDevices.ToString(), Hint = $"{offlineDevices} offline (fleet)" }
+                    new CopilotCardItemDto { Label = _t["Copilot_WidgetLabelDetections"].Value, Value = total.ToString("N0", CultureInfo.CurrentUICulture), Hint = scopeLine },
+                    new CopilotCardItemDto { Label = _t["Copilot_WidgetLabelAlerts"].Value, Value = alerts.ToString("N0", CultureInfo.CurrentUICulture), Hint = string.Format(CultureInfo.CurrentUICulture, _t["Copilot_AlertPctHintFmt"].Value, alertRate) },
+                    new CopilotCardItemDto { Label = _t["Copilot_WidgetDevicesOnlineLabel"].Value, Value = onlineDevices.ToString("N0", CultureInfo.CurrentUICulture), Hint = string.Format(CultureInfo.CurrentUICulture, _t["Copilot_DevicesOfflineHintFmt"].Value, offlineDevices) }
                 ]
             }
         };
@@ -647,11 +649,11 @@ public class CopilotIntentService : ICopilotIntentService
             widgets.Add(new CopilotWidgetDto
             {
                 Type = "chart",
-                Title = "Plate type mix (scoped)",
+                Title = _t["Copilot_ChartMixedPlateTypesScoped"].Value,
                 Chart = new CopilotChartDto
                 {
                     Kind = "doughnut",
-                    Title = "Plate types",
+                    Title = _t["Copilot_SecondarySubtitlePlateKinds"].Value,
                     Labels = labels,
                     Data = data,
                     Colors = colors.Take(labels.Count).ToList()
@@ -660,8 +662,8 @@ public class CopilotIntentService : ICopilotIntentService
         }
 
         var tableTitle = string.IsNullOrWhiteSpace(parsed.QueryText)
-            ? "Hot plates (frequency)"
-            : "Plates matching filter";
+            ? _t["Copilot_TableHotPlatesScoped"].Value
+            : _t["Copilot_TableMatchedPlates"].Value;
 
         widgets.AddRange(new[]
         {
@@ -671,15 +673,15 @@ public class CopilotIntentService : ICopilotIntentService
                 Title = tableTitle,
                 Table = new CopilotTableDto
                 {
-                    Headers = ["Plate", "Hits"],
-                    Rows = topPlates.Select(p => new List<string> { p.Plate, p.Count.ToString() }).ToList()
+                    Headers = [_t["Copilot_Insight_Plates_Header"].Value, _t["Copilot_Insight_Hits_Header"].Value],
+                    Rows = topPlates.Select(p => new List<string> { p.Plate, p.Count.ToString("N0", CultureInfo.CurrentUICulture) }).ToList()
                 }
             },
             new CopilotWidgetDto
             {
                 Type = "note",
                 Note = total == 0
-                    ? "No ANPR rows match this scope. Try a broader time window or open forensic search."
+                    ? _t["Copilot_NoteNoRowsMatched"].Value
                     : anomalyNote
             }
         });
@@ -689,13 +691,18 @@ public class CopilotIntentService : ICopilotIntentService
         {
             Reply =
                 total == 0
-                    ? $"**Co-Pilot insights** ({scopeLine}) — no detections in this scope. Try widening the time range or filters."
-                    : $"**Co-Pilot insights** ({scopeLine}) — **{total:N0}** detections, **{alerts}** flagged. {anomalyNote}",
+                    ? string.Format(CultureInfo.CurrentUICulture, _t["Copilot_InsightsEmptyReplyFmt"].Value, scopeLine)
+                    : string.Format(CultureInfo.CurrentUICulture,
+                        _t["Copilot_InsightsReplyFmt"].Value,
+                        scopeLine,
+                        total.ToString("N0", CultureInfo.CurrentUICulture),
+                        alerts.ToString("N0", CultureInfo.CurrentUICulture),
+                        anomalyNote),
             Intent = "insights",
             Actions =
             [
-                new CopilotActionDto { Type = "navigate", Label = "Open matching search", Href = searchHref, Primary = true },
-                new CopilotActionDto { Type = "navigate", Label = "Device map", Href = "/Devices" }
+                new CopilotActionDto { Type = "navigate", Label = _t["Copilot_Action_ShowMatchingHits"].Value, Href = searchHref, Primary = true },
+                new CopilotActionDto { Type = "navigate", Label = _t["Copilot_Action_ShowDeviceAtlas"].Value, Href = "/Devices" }
             ],
             Widgets = widgets,
             Speak = voice

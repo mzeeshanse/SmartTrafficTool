@@ -1,12 +1,15 @@
-<div id="copilot-shell" class="copilot-shell" data-api-url="@Url.Content("~/api/Copilot/message")">
+<div id="copilot-shell"
+     class="copilot-shell"
+     data-api-url="@Url.Content("~/api/Copilot/message")"
+     data-speech-lang="@(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar" ? "ar-QA" : "en-QA")">
     <button type="button"
             id="copilot-fab"
             class="copilot-fab btn btn-accent"
             aria-expanded="false"
             aria-controls="copilot-panel"
-            title="Open AI Co-Pilot">
+            title="@L["Copilot_OpenTooltip"]">
         <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
-        <span class="copilot-fab-label">Co-Pilot</span>
+        <span class="copilot-fab-label">@L["Copilot_FabLabel"]</span>
     </button>
 
     <div id="copilot-panel"
@@ -17,25 +20,25 @@
          hidden>
         <div class="copilot-panel-header">
             <div>
-                <div id="copilot-panel-title" class="copilot-panel-title">Central AI Co-Pilot</div>
-                <div class="copilot-panel-subtitle">Quick picks · Search · Navigate · Insights · Voice</div>
+                <div id="copilot-panel-title" class="copilot-panel-title">@L["Copilot_PanelTitle"]</div>
+                <div class="copilot-panel-subtitle">@L["Copilot_PanelSubtitle"]</div>
             </div>
-            <button type="button" class="btn btn-ghost btn-sm copilot-close" aria-label="Close Co-Pilot">
+            <button type="button" class="btn btn-ghost btn-sm copilot-close" aria-label="@L["Copilot_CloseAria"]">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
 
         <div id="copilot-messages" class="copilot-messages"></div>
 
-        <div class="copilot-quick-picks" role="toolbar" aria-label="Quick phrases">
-            <span class="copilot-quick-picks-label">Quick:</span>
-            <button type="button" class="copilot-quick-pick" data-copilot-message="Summary for 7 days">Summary for 7 days</button>
-            <button type="button" class="copilot-quick-pick" data-copilot-message="Summary for Saudi Plate for 7 days">Summary for Saudi Plate for 7 days</button>
-            <button type="button" class="copilot-quick-pick" data-copilot-message="Summary for All Taxi 7 days">Summary for All Taxi 7 days</button>
-            <button type="button" class="copilot-quick-pick" data-copilot-message="Open Device 57">Open Device 57</button>
-            <button type="button" class="copilot-quick-pick" data-copilot-message="Open All Devices">Open All Devices</button>
-            <button type="button" class="copilot-quick-pick" data-copilot-message="Summary of Plate with text ***" title="Replace *** with the plate fragment you want">Summary of Plate with text ***</button>
-            <button type="button" class="copilot-quick-pick" data-copilot-message="Investigate plate number 668928">Investigate plate number 668928</button>
+        <div class="copilot-quick-picks" role="toolbar" aria-label="@L["Copilot_QuickAria"]">
+            <span class="copilot-quick-picks-label">@L["Copilot_QuickLabel"]</span>
+            <button type="button" class="copilot-quick-pick" data-copilot-message="Summary for 7 days">@L["Copilot_Msg_Summary7"]</button>
+            <button type="button" class="copilot-quick-pick" data-copilot-message="Summary for Saudi Plate for 7 days">@L["Copilot_Msg_SummarySaudi"]</button>
+            <button type="button" class="copilot-quick-pick" data-copilot-message="Summary for All Taxi 7 days">@L["Copilot_Msg_SummaryTaxi"]</button>
+            <button type="button" class="copilot-quick-pick" data-copilot-message="Open Device 57">@L["Copilot_Msg_OpenDevice57"]</button>
+            <button type="button" class="copilot-quick-pick" data-copilot-message="Open All Devices">@L["Copilot_Msg_OpenAllDevices"]</button>
+            <button type="button" class="copilot-quick-pick" data-copilot-message="Summary of Plate with text ***" title="@L["Copilot_Msg_PlatePlaceholderHint"]">@L["Copilot_Msg_SummaryPlateTemplate"]</button>
+            <button type="button" class="copilot-quick-pick" data-copilot-message="Investigate plate number 668928">@L["Copilot_Msg_DemoPlateInvestigate"]</button>
         </div>
 
         <div class="copilot-panel-footer">
@@ -44,14 +47,14 @@
                 <textarea id="copilot-input"
                           class="form-control copilot-input"
                           rows="2"
-                          placeholder="Try: insights, open devices, find QTR-051 taxi last 24 hours…"
+                          placeholder="@L["Copilot_InputPlaceholder"]"
                           autocomplete="off"></textarea>
                 <div class="copilot-input-actions">
-                    <button type="button" id="copilot-mic" class="btn btn-outline-light btn-sm" title="Voice input">
+                    <button type="button" id="copilot-mic" class="btn btn-outline-light btn-sm" title="@L["Copilot_VoiceInputTitle"]">
                         <i class="fa-solid fa-microphone"></i>
                     </button>
                     <button type="button" id="copilot-send" class="btn btn-accent btn-sm">
-                        <i class="fa-solid fa-paper-plane me-1"></i>Send
+                        <i class="fa-solid fa-paper-plane me-1"></i>@L["Copilot_Send"]
                     </button>
                 </div>
             </div>

@@ -1,5 +1,7 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using SmartTrafficTool.Data;
 using SmartTrafficTool.Models;
 using SmartTrafficTool.ViewModels;
@@ -14,12 +16,18 @@ public class PocDemoController : Controller
     private readonly AppDbContext _db;
     private readonly IWebHostEnvironment _env;
     private readonly IConfiguration _config;
+    private readonly IStringLocalizer<SharedResource> _t;
 
-    public PocDemoController(AppDbContext db, IWebHostEnvironment env, IConfiguration config)
+    public PocDemoController(
+        AppDbContext db,
+        IWebHostEnvironment env,
+        IConfiguration config,
+        IStringLocalizer<SharedResource> t)
     {
         _db = db;
         _env = env;
         _config = config;
+        _t = t;
     }
 
     private bool PocDemoToolsEnabled =>
@@ -96,8 +104,6 @@ public class PocDemoController : Controller
             model.SelectedSavedRouteId = first.Id;
         }
 
-        ViewData["Title"] = "POC route simulator";
-        ViewData["PageSubtitle"] = "Insert demo ANPR transactions along a path — choose UTC captured date (time-of-day spacing preserved)";
         return View(model);
     }
 
@@ -116,19 +122,19 @@ public class PocDemoController : Controller
 
         if (string.IsNullOrEmpty(name))
         {
-            TempData["PocDemoError"] = "Enter a name before saving the path.";
+            TempData["PocDemoError"] = _t["Poc_Err_NameRequired"].Value;
             return RedirectToAction(nameof(Index));
         }
 
         if (pathDeviceIds.Count == 0)
         {
-            TempData["PocDemoError"] = "Add at least one camera to the path before saving.";
+            TempData["PocDemoError"] = _t["Poc_Err_MinOneCameraSave"].Value;
             return RedirectToAction(nameof(Index));
         }
 
         if (name.Length > 120)
         {
-            TempData["PocDemoError"] = "Path name must be 120 characters or fewer.";
+            TempData["PocDemoError"] = _t["Poc_Err_NameLength"].Value;
             return RedirectToAction(nameof(Index));
         }
 
@@ -153,7 +159,10 @@ public class PocDemoController : Controller
         }
 
         await _db.SaveChangesAsync();
-        TempData["PocDemoSuccess"] = $"Saved path “{name}” ({pathDeviceIds.Count} camera(s)).";
+        TempData["PocDemoSuccess"] = string.Format(CultureInfo.CurrentUICulture,
+            _t["Poc_Success_SavedFmt"].Value,
+            name,
+            pathDeviceIds.Count);
         return RedirectToAction(nameof(Index));
     }
 
@@ -183,16 +192,12 @@ public class PocDemoController : Controller
 
         if (!ModelState.IsValid)
         {
-            ViewData["Title"] = "POC route simulator";
-            ViewData["PageSubtitle"] = "Insert demo ANPR transactions along a path — choose UTC captured date (time-of-day spacing preserved)";
             return View("Index", model);
         }
 
         if (model.PathDeviceIds.Count == 0)
         {
-            ModelState.AddModelError(nameof(model.PathDeviceIds), "Add at least one camera to the path (in order).");
-            ViewData["Title"] = "POC route simulator";
-            ViewData["PageSubtitle"] = "Insert demo ANPR transactions along a path — choose UTC captured date (time-of-day spacing preserved)";
+            ModelState.AddModelError(nameof(model.PathDeviceIds), _t["Poc_Err_AddCameraPathGenerate"].Value);
             return View("Index", model);
         }
 
@@ -209,13 +214,17 @@ public class PocDemoController : Controller
         if (error != null)
         {
             ModelState.AddModelError(string.Empty, error);
-            ViewData["Title"] = "POC route simulator";
-            ViewData["PageSubtitle"] = "Insert demo ANPR transactions along a path — choose UTC captured date (time-of-day spacing preserved)";
             return View("Index", model);
         }
 
-        TempData["PocDemoSuccess"] =
-            $"Inserted {inserted} transaction(s) for plate “{model.PlateText.Trim()}” on {model.CapturedDate:yyyy-MM-dd} (UTC) along {model.PathDeviceIds.Count} camera(s). Times increase along the path; search for that date or window as needed.";
+        var dateStr = model.CapturedDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        TempData["PocDemoSuccess"] = string.Format(CultureInfo.CurrentUICulture,
+            _t["Poc_Success_InsertedFmt"].Value,
+            inserted,
+            model.PlateText.Trim(),
+            dateStr,
+            model.PathDeviceIds.Count);
+
         return RedirectToAction(nameof(Index));
     }
 }

@@ -1,21 +1,40 @@
+@using System.Globalization
+@using System.Linq
+@using System.Text.Json
 @{
-    ViewData["Title"] = "AI Anomalies";
+    ViewData["Title"] = L["Title_AIAnomalies"].Value;
+    ViewData["PageSubtitle"] = L["PageSubtitle_AIAnomalies"].Value;
+    var forensicTagLabelKeys = new[]
+    {
+        "ForensicTag_FrequentViolator",
+        "ForensicTag_CleanRecord",
+        "ForensicTag_NightCrawler",
+        "ForensicTag_CoTravelPattern",
+        "ForensicTag_ZoneTrespasser",
+        "ForensicTag_PlateSwapper"
+    };
+    var forensicTagChartLabelsJson = JsonSerializer.Serialize(forensicTagLabelKeys.Select(k => L[k].Value).ToArray());
+    string RiskText(string r) => r switch
+    {
+        "high" => L["Forensic_RiskLabel_High"].Value,
+        "medium" => L["Forensic_RiskLabel_Medium"].Value,
+        _ => L["Forensic_RiskLabel_Low"].Value
+    };
 }
 
-<div class="forensic-page">    
-
+<div class="forensic-page">
     <div class="result-view-tabs forensic-view-tabs" role="tablist">
-        <button type="button" class="btn btn-ghost btn-sm tab-btn active" data-forensic-tab="ghost" role="tab" aria-selected="true" aria-pressed="true">Ghost Plates</button>
-        <button type="button" class="btn btn-ghost btn-sm tab-btn" data-forensic-tab="convoy" role="tab" aria-selected="false" aria-pressed="false">Convoy Detection</button>
-        <button type="button" class="btn btn-ghost btn-sm tab-btn" data-forensic-tab="tags" role="tab" aria-selected="false" aria-pressed="false">Behavioral Tags</button>
+        <button type="button" class="btn btn-ghost btn-sm tab-btn active" data-forensic-tab="ghost" role="tab" aria-selected="true" aria-pressed="true">@L["Forensic_Tab_GhostPlates"]</button>
+        <button type="button" class="btn btn-ghost btn-sm tab-btn" data-forensic-tab="convoy" role="tab" aria-selected="false" aria-pressed="false">@L["Forensic_Tab_Convoy"]</button>
+        <button type="button" class="btn btn-ghost btn-sm tab-btn" data-forensic-tab="tags" role="tab" aria-selected="false" aria-pressed="false">@L["Forensic_Tab_Tags"]</button>
     </div>
 
     <section id="forensic-panel-ghost" class="forensic-panel active" role="tabpanel">
         <div class="forensic-banner forensic-banner--ghost">
             <i class="fa-solid fa-ghost forensic-banner-icon" aria-hidden="true"></i>
             <div>
-                <h2 class="forensic-banner-title">Plate Spoofing Detection</h2>
-                <p class="forensic-banner-text">The system detected plates appearing at physically impossible locations within short timeframes. These may indicate cloned or swapped plates.</p>
+                <h2 class="forensic-banner-title">@L["Forensic_Ghost_Title"]</h2>
+                <p class="forensic-banner-text">@L["Forensic_Ghost_Body"]</p>
             </div>
         </div>
 
@@ -27,28 +46,28 @@
                         <div class="ghost-plate-card__plate">87378 TBW</div>
                         <div class="ghost-plate-card__veh">VEH-0001</div>
                     </div>
-                    <div class="forensic-critical-pill"><span class="forensic-critical-pill__dot"></span> Critical</div>
+                    <div class="forensic-critical-pill"><span class="forensic-critical-pill__dot"></span> @L["Forensic_Critical"]</div>
                 </div>
                 <div class="ghost-plate-card__compare">
                     <div class="ghost-detection-col">
-                        <div class="ghost-detection-label">Detection 1</div>
+                        <div class="ghost-detection-label">@string.Format(CultureInfo.CurrentUICulture, L["Forensic_DetectionN"].Value, 1)</div>
                         <div class="ghost-detection-row"><i class="fa-solid fa-location-dot"></i> West Bay</div>
                         <div class="ghost-detection-row"><i class="fa-regular fa-clock"></i> 15:28:59</div>
                     </div>
                     <div class="ghost-detection-col">
-                        <div class="ghost-detection-label">Detection 2</div>
+                        <div class="ghost-detection-label">@string.Format(CultureInfo.CurrentUICulture, L["Forensic_DetectionN"].Value, 2)</div>
                         <div class="ghost-detection-row"><i class="fa-solid fa-location-dot"></i> Al Wakrah</div>
                         <div class="ghost-detection-row"><i class="fa-regular fa-clock"></i> 15:33:59</div>
                     </div>
                 </div>
                 <div class="ghost-plate-card__metrics">
-                    <div class="ghost-metric"><span class="ghost-metric__label">Distance</span><span class="ghost-metric__val">22.4 km</span></div>
-                    <div class="ghost-metric"><span class="ghost-metric__label">Time diff</span><span class="ghost-metric__val">5 min</span></div>
-                    <div class="ghost-metric ghost-metric--alert"><span class="ghost-metric__label"><i class="fa-solid fa-bolt"></i> Required speed</span><span class="ghost-metric__val">268 km/h</span></div>
+                    <div class="ghost-metric"><span class="ghost-metric__label">@L["Forensic_Ghost_Distance"]</span><span class="ghost-metric__val">22.4 km</span></div>
+                    <div class="ghost-metric"><span class="ghost-metric__label">@L["Forensic_Ghost_TimeDiff"]</span><span class="ghost-metric__val">5 min</span></div>
+                    <div class="ghost-metric ghost-metric--alert"><span class="ghost-metric__label"><i class="fa-solid fa-bolt"></i> @L["Forensic_Ghost_RequiredSpeed"]</span><span class="ghost-metric__val">268 km/h</span></div>
                 </div>
                 <div class="ghost-plate-card__actions">
-                    <button type="button" class="forensic-btn forensic-btn--outline">View vehicle</button>
-                    <button type="button" class="forensic-btn forensic-btn--danger">Investigate</button>
+                    <button type="button" class="forensic-btn forensic-btn--outline">@L["Forensic_Action_ViewVehicle"]</button>
+                    <button type="button" class="forensic-btn forensic-btn--danger">@L["Forensic_Action_Investigate"]</button>
                 </div>
             </article>
 
@@ -59,28 +78,28 @@
                         <div class="ghost-plate-card__plate">68836 BF</div>
                         <div class="ghost-plate-card__veh">VEH-0042</div>
                     </div>
-                    <div class="forensic-critical-pill"><span class="forensic-critical-pill__dot"></span> Critical</div>
+                    <div class="forensic-critical-pill"><span class="forensic-critical-pill__dot"></span> @L["Forensic_Critical"]</div>
                 </div>
                 <div class="ghost-plate-card__compare">
                     <div class="ghost-detection-col">
-                        <div class="ghost-detection-label">Detection 1</div>
+                        <div class="ghost-detection-label">@string.Format(CultureInfo.CurrentUICulture, L["Forensic_DetectionN"].Value, 1)</div>
                         <div class="ghost-detection-row"><i class="fa-solid fa-location-dot"></i> The Pearl</div>
                         <div class="ghost-detection-row"><i class="fa-regular fa-clock"></i> 09:12:04</div>
                     </div>
                     <div class="ghost-detection-col">
-                        <div class="ghost-detection-label">Detection 2</div>
+                        <div class="ghost-detection-label">@string.Format(CultureInfo.CurrentUICulture, L["Forensic_DetectionN"].Value, 2)</div>
                         <div class="ghost-detection-row"><i class="fa-solid fa-location-dot"></i> Al Khor</div>
                         <div class="ghost-detection-row"><i class="fa-regular fa-clock"></i> 09:18:44</div>
                     </div>
                 </div>
                 <div class="ghost-plate-card__metrics">
-                    <div class="ghost-metric"><span class="ghost-metric__label">Distance</span><span class="ghost-metric__val">48.1 km</span></div>
-                    <div class="ghost-metric"><span class="ghost-metric__label">Time diff</span><span class="ghost-metric__val">6 min</span></div>
-                    <div class="ghost-metric ghost-metric--alert"><span class="ghost-metric__label"><i class="fa-solid fa-bolt"></i> Required speed</span><span class="ghost-metric__val">481 km/h</span></div>
+                    <div class="ghost-metric"><span class="ghost-metric__label">@L["Forensic_Ghost_Distance"]</span><span class="ghost-metric__val">48.1 km</span></div>
+                    <div class="ghost-metric"><span class="ghost-metric__label">@L["Forensic_Ghost_TimeDiff"]</span><span class="ghost-metric__val">6 min</span></div>
+                    <div class="ghost-metric ghost-metric--alert"><span class="ghost-metric__label"><i class="fa-solid fa-bolt"></i> @L["Forensic_Ghost_RequiredSpeed"]</span><span class="ghost-metric__val">481 km/h</span></div>
                 </div>
                 <div class="ghost-plate-card__actions">
-                    <button type="button" class="forensic-btn forensic-btn--outline">View vehicle</button>
-                    <button type="button" class="forensic-btn forensic-btn--danger">Investigate</button>
+                    <button type="button" class="forensic-btn forensic-btn--outline">@L["Forensic_Action_ViewVehicle"]</button>
+                    <button type="button" class="forensic-btn forensic-btn--danger">@L["Forensic_Action_Investigate"]</button>
                 </div>
             </article>
         </div>
@@ -91,8 +110,8 @@
             <div class="forensic-banner forensic-banner--convoy">
                 <i class="fa-solid fa-user-group forensic-banner-icon" aria-hidden="true"></i>
                 <div>
-                    <h2 class="forensic-banner-title">Co-Travel / Convoy Detection</h2>
-                    <p class="forensic-banner-text">Vehicles consistently traveling together or meeting at shared locations. Pattern analysis detects potential coordinated movement.</p>
+                    <h2 class="forensic-banner-title">@L["Forensic_Convoy_Title"]</h2>
+                    <p class="forensic-banner-text">@L["Forensic_Convoy_Body"]</p>
                 </div>
             </div>
 
@@ -102,23 +121,23 @@
                         <div class="convoy-card__head-left">
                             <i class="fa-solid fa-user-group convoy-card__head-icon" aria-hidden="true"></i>
                             <div>
-                                <div class="convoy-card__title">CONVOY-1 — 3 Vehicles</div>
-                                <div class="convoy-card__sub">10 co-travel occurrences</div>
+                                <div class="convoy-card__title">@string.Format(CultureInfo.CurrentUICulture, L["Forensic_Convoy_CardTitleFmt"].Value, "CONVOY-1", 3)</div>
+                                <div class="convoy-card__sub">@string.Format(CultureInfo.CurrentUICulture, L["Forensic_Convoy_OccFmt"].Value, 10)</div>
                             </div>
                         </div>
                         <div class="convoy-card__head-right">
                             <span class="convoy-pct">77.8%</span>
-                            <span class="convoy-active-pill"><span class="convoy-active-pill__dot"></span> Active</span>
+                            <span class="convoy-active-pill"><span class="convoy-active-pill__dot"></span> @L["Forensic_Convoy_Active"]</span>
                         </div>
                     </div>
                     <ul class="convoy-vehicle-list">
-                        <li><span>87378 TBW Grey Porsche Panamera</span><button type="button" class="convoy-view-link"><i class="fa-regular fa-eye"></i> View</button></li>
-                        <li><span>47576 XRY White Nissan Sunny</span><button type="button" class="convoy-view-link"><i class="fa-regular fa-eye"></i> View</button></li>
-                        <li><span>6428 TZ Black Land Rover Range Rover Sport</span><button type="button" class="convoy-view-link"><i class="fa-regular fa-eye"></i> View</button></li>
+                        <li><span>87378 TBW Grey Porsche Panamera</span><button type="button" class="convoy-view-link"><i class="fa-regular fa-eye"></i> @L["Forensic_Convoy_View"]</button></li>
+                        <li><span>47576 XRY White Nissan Sunny</span><button type="button" class="convoy-view-link"><i class="fa-regular fa-eye"></i> @L["Forensic_Convoy_View"]</button></li>
+                        <li><span>6428 TZ Black Land Rover Range Rover Sport</span><button type="button" class="convoy-view-link"><i class="fa-regular fa-eye"></i> @L["Forensic_Convoy_View"]</button></li>
                     </ul>
                     <div class="convoy-card__foot">
-                        <div class="convoy-route"><i class="fa-solid fa-location-dot"></i> West Bay - Corniche St → Lusail - Boulevard → The Pearl - Porto Arabia</div>
-                        <div class="convoy-dates">First: Apr 2 &nbsp; Last: Apr 7, 14:28</div>
+                        <div class="convoy-route"><i class="fa-solid fa-location-dot"></i> West Bay — Corniche St → Lusail — Boulevard → The Pearl — Porto Arabia</div>
+                        <div class="convoy-dates">@string.Format(CultureInfo.CurrentUICulture, L["Forensic_Convoy_DateRangeFmt"].Value, "Apr 2", "Apr 7, 14:28")</div>
                     </div>
                 </article>
 
@@ -127,23 +146,23 @@
                         <div class="convoy-card__head-left">
                             <i class="fa-solid fa-user-group convoy-card__head-icon" aria-hidden="true"></i>
                             <div>
-                                <div class="convoy-card__title">CONVOY-2 — 3 Vehicles</div>
-                                <div class="convoy-card__sub">9 co-travel occurrences</div>
+                                <div class="convoy-card__title">@string.Format(CultureInfo.CurrentUICulture, L["Forensic_Convoy_CardTitleFmt"].Value, "CONVOY-2", 3)</div>
+                                <div class="convoy-card__sub">@string.Format(CultureInfo.CurrentUICulture, L["Forensic_Convoy_OccFmt"].Value, 9)</div>
                             </div>
                         </div>
                         <div class="convoy-card__head-right">
                             <span class="convoy-pct">78.2%</span>
-                            <span class="convoy-active-pill"><span class="convoy-active-pill__dot"></span> Active</span>
+                            <span class="convoy-active-pill"><span class="convoy-active-pill__dot"></span> @L["Forensic_Convoy_Active"]</span>
                         </div>
                     </div>
                     <ul class="convoy-vehicle-list">
-                        <li><span>68836 BF Silver Hyundai Santa Fe</span><button type="button" class="convoy-view-link"><i class="fa-regular fa-eye"></i> View</button></li>
-                        <li><span>28714 L Silver Porsche Cayenne</span><button type="button" class="convoy-view-link"><i class="fa-regular fa-eye"></i> View</button></li>
-                        <li><span>26786 S Green Lexus RX350</span><button type="button" class="convoy-view-link"><i class="fa-regular fa-eye"></i> View</button></li>
+                        <li><span>68836 BF Silver Hyundai Santa Fe</span><button type="button" class="convoy-view-link"><i class="fa-regular fa-eye"></i> @L["Forensic_Convoy_View"]</button></li>
+                        <li><span>28714 L Silver Porsche Cayenne</span><button type="button" class="convoy-view-link"><i class="fa-regular fa-eye"></i> @L["Forensic_Convoy_View"]</button></li>
+                        <li><span>26786 S Green Lexus RX350</span><button type="button" class="convoy-view-link"><i class="fa-regular fa-eye"></i> @L["Forensic_Convoy_View"]</button></li>
                     </ul>
                     <div class="convoy-card__foot">
-                        <div class="convoy-route"><i class="fa-solid fa-location-dot"></i> West Bay - Corniche St → Lusail - Boulevard → The Pearl - Porto Arabia</div>
-                        <div class="convoy-dates">First: Apr 2 &nbsp; Last: Apr 7, 14:28</div>
+                        <div class="convoy-route"><i class="fa-solid fa-location-dot"></i> West Bay — Corniche St → Lusail — Boulevard → The Pearl — Porto Arabia</div>
+                        <div class="convoy-dates">@string.Format(CultureInfo.CurrentUICulture, L["Forensic_Convoy_DateRangeFmt"].Value, "Apr 2", "Apr 7, 14:28")</div>
                     </div>
                 </article>
             </div>
@@ -154,36 +173,37 @@
         <div class="forensic-banner forensic-banner--tags">
             <i class="fa-solid fa-shield-virus forensic-banner-icon" aria-hidden="true"></i>
             <div>
-                <h2 class="forensic-banner-title">AI Behavioral Tagging</h2>
-                <p class="forensic-banner-text">Vehicles are automatically tagged based on their historical behavior patterns, violations, and movement anomalies.</p>
+                <h2 class="forensic-banner-title">@L["Forensic_Tags_Title"]</h2>
+                <p class="forensic-banner-text">@L["Forensic_Tags_Body"]</p>
             </div>
         </div>
 
         <div class="forensic-chart-card">
-            <h3 class="forensic-chart-title"><i class="fa-solid fa-chart-column"></i> Tag distribution</h3>
+            <h3 class="forensic-chart-title"><i class="fa-solid fa-chart-column"></i> @L["Forensic_Tags_ChartHeading"]</h3>
             <div class="forensic-chart-wrap">
                 <canvas id="forensicTagChart" height="220"></canvas>
             </div>
         </div>
 
-        <h3 class="forensic-grid-heading">High-Risk Flagged Vehicles (25)</h3>
+        @{
+            var flagged = new[]
+            {
+                new { Plate = "87378 TBW", Desc = "2024 Grey Porsche Panamera", Class = "Coupe", Origin = "Saudi Arabia", Viol = "4", Risk = "high", Tags = new[] { ("ForensicTag_FrequentViolator", "danger"), ("ForensicTag_NightCrawler", "blue") }, Watch = true, Loc = "West Bay", Time = "Apr 3, 12:57" },
+                new { Plate = "47576 XRY", Desc = "2022 White Nissan Sunny", Class = "Sedan", Origin = "Oman", Viol = "0", Risk = "low", Tags = new[] { ("ForensicTag_CleanRecord", "clean") }, Watch = false, Loc = "Lusail", Time = "Apr 4, 08:22" },
+                new { Plate = "6428 TZ", Desc = "2021 Black Range Rover Sport", Class = "SUV", Origin = "UAE", Viol = "1", Risk = "medium", Tags = new[] { ("ForensicTag_CoTravelPattern", "amber") }, Watch = false, Loc = "The Pearl", Time = "Apr 5, 19:40" },
+                new { Plate = "68836 BF", Desc = "2024 Silver Hyundai Santa Fe", Class = "SUV", Origin = "Qatar", Viol = "4", Risk = "high", Tags = new[] { ("ForensicTag_FrequentViolator", "danger"), ("ForensicTag_ZoneTrespasser", "yellow") }, Watch = true, Loc = "Katara", Time = "Apr 3, 22:08" },
+                new { Plate = "28714 L", Desc = "2023 Silver Porsche Cayenne", Class = "SUV", Origin = "Kuwait", Viol = "2", Risk = "medium", Tags = new[] { ("ForensicTag_NightCrawler", "blue") }, Watch = false, Loc = "West Bay", Time = "Apr 6, 01:15" },
+                new { Plate = "26786 S", Desc = "2020 Green Lexus RX350", Class = "SUV", Origin = "UAE", Viol = "0", Risk = "low", Tags = new[] { ("ForensicTag_CleanRecord", "clean") }, Watch = false, Loc = "Al Rayyan", Time = "Apr 7, 11:03" },
+                new { Plate = "DXB-3021", Desc = "2019 White Toyota Camry", Class = "Sedan", Origin = "UAE", Viol = "5", Risk = "high", Tags = new[] { ("ForensicTag_PlateSwapper", "dark-red") }, Watch = true, Loc = "Corniche", Time = "Apr 2, 16:44" },
+                new { Plate = "SHJ-1180", Desc = "2024 Van Ford Transit", Class = "Van", Origin = "UAE", Viol = "1", Risk = "medium", Tags = new[] { ("ForensicTag_CoTravelPattern", "amber") }, Watch = false, Loc = "Industrial", Time = "Apr 5, 13:20" },
+            };
+        }
+        <h3 class="forensic-grid-heading">@string.Format(CultureInfo.CurrentUICulture, L["Forensic_Tags_FlaggedHeadingFmt"].Value, flagged.Length)</h3>
         <div class="forensic-vehicle-grid">
-            @{
-                var flagged = new[]
-                {
-                    new { Plate = "87378 TBW", Desc = "2024 Grey Porsche Panamera", Class = "Coupe", Origin = "Saudi Arabia", Viol = "4", Risk = "high", RiskLabel = "High risk", Tags = new[] { ("Frequent Violator", "danger"), ("Night Crawler", "blue") }, Watch = true, Loc = "West Bay", Time = "Apr 3, 12:57" },
-                    new { Plate = "47576 XRY", Desc = "2022 White Nissan Sunny", Class = "Sedan", Origin = "Oman", Viol = "0", Risk = "low", RiskLabel = "Low", Tags = new[] { ("Clean Record", "clean") }, Watch = false, Loc = "Lusail", Time = "Apr 4, 08:22" },
-                    new { Plate = "6428 TZ", Desc = "2021 Black Range Rover Sport", Class = "SUV", Origin = "UAE", Viol = "1", Risk = "medium", RiskLabel = "Medium", Tags = new[] { ("Co-Travel Pattern", "amber") }, Watch = false, Loc = "The Pearl", Time = "Apr 5, 19:40" },
-                    new { Plate = "68836 BF", Desc = "2024 Silver Hyundai Santa Fe", Class = "SUV", Origin = "Qatar", Viol = "4", Risk = "high", RiskLabel = "High risk", Tags = new[] { ("Frequent Violator", "danger"), ("Zone Trespasser", "yellow") }, Watch = true, Loc = "Katara", Time = "Apr 3, 22:08" },
-                    new { Plate = "28714 L", Desc = "2023 Silver Porsche Cayenne", Class = "SUV", Origin = "Kuwait", Viol = "2", Risk = "medium", RiskLabel = "Medium", Tags = new[] { ("Night Crawler", "blue") }, Watch = false, Loc = "West Bay", Time = "Apr 6, 01:15" },
-                    new { Plate = "26786 S", Desc = "2020 Green Lexus RX350", Class = "SUV", Origin = "UAE", Viol = "0", Risk = "low", RiskLabel = "Low", Tags = new[] { ("Clean Record", "clean") }, Watch = false, Loc = "Al Rayyan", Time = "Apr 7, 11:03" },
-                    new { Plate = "DXB-3021", Desc = "2019 White Toyota Camry", Class = "Sedan", Origin = "UAE", Viol = "5", Risk = "high", RiskLabel = "High risk", Tags = new[] { ("Suspected Plate Swapper", "dark-red") }, Watch = true, Loc = "Corniche", Time = "Apr 2, 16:44" },
-                    new { Plate = "SHJ-1180", Desc = "2024 Van Ford Transit", Class = "Van", Origin = "UAE", Viol = "1", Risk = "medium", RiskLabel = "Medium", Tags = new[] { ("Co-Travel Pattern", "amber") }, Watch = false, Loc = "Industrial", Time = "Apr 5, 13:20" },
-                };
-            }
             @foreach (var v in flagged)
             {
                 var riskClass = v.Risk switch { "high" => "forensic-risk--high", "medium" => "forensic-risk--medium", _ => "forensic-risk--low" };
+                var riskLbl = RiskText(v.Risk);
                 <article class="forensic-vehicle-card">
                     <div class="forensic-vehicle-card__head">
                         <div class="forensic-vehicle-card__icon"><i class="fa-solid fa-car-side"></i></div>
@@ -194,29 +214,29 @@
                         <div class="forensic-vehicle-card__badges">
                             @if (v.Watch)
                             {
-                                <span class="forensic-watch-pill">Watchlisted</span>
+                                <span class="forensic-watch-pill">@L["Forensic_Watchlisted"]</span>
                             }
-                            <span class="forensic-risk-pill @riskClass"><span class="forensic-risk-pill__dot"></span> @v.RiskLabel</span>
+                            <span class="forensic-risk-pill @riskClass"><span class="forensic-risk-pill__dot"></span> @riskLbl</span>
                         </div>
                     </div>
                     <div class="forensic-vehicle-kpis">
                         <div class="map-popup-kpi forensic-vehicle-kpi">
-                            <span class="map-popup-kpi-label">Class</span>
+                            <span class="map-popup-kpi-label">@L["Forensic_Kpi_Class"]</span>
                             <span class="map-popup-kpi-value">@v.Class</span>
                         </div>
                         <div class="map-popup-kpi forensic-vehicle-kpi">
-                            <span class="map-popup-kpi-label">Origin</span>
+                            <span class="map-popup-kpi-label">@L["Forensic_Kpi_Origin"]</span>
                             <span class="map-popup-kpi-value">@v.Origin</span>
                         </div>
                         <div class="map-popup-kpi forensic-vehicle-kpi">
-                            <span class="map-popup-kpi-label">Violations</span>
+                            <span class="map-popup-kpi-label">@L["Forensic_Kpi_Violations"]</span>
                             <span class="map-popup-kpi-value">@v.Viol</span>
                         </div>
                     </div>
                     <div class="forensic-vehicle-tags">
                         @foreach (var t in v.Tags)
                         {
-                            <span class="forensic-tag forensic-tag--@t.Item2">@t.Item1</span>
+                            <span class="forensic-tag forensic-tag--@t.Item2">@L[t.Item1]</span>
                         }
                     </div>
                     <div class="forensic-vehicle-meta">
@@ -232,6 +252,7 @@
 @section Scripts {
     <script>
         (function () {
+            const tagChartLabels = @Html.Raw(forensicTagChartLabelsJson);
             const tabs = document.querySelectorAll("[data-forensic-tab]");
             const panels = {
                 ghost: document.getElementById("forensic-panel-ghost"),
@@ -267,14 +288,7 @@
                         tagChart = new Chart(canvas.getContext("2d"), {
                             type: "bar",
                             data: {
-                                labels: [
-                                    "Frequent Violator",
-                                    "Clean Record",
-                                    "Night Crawler",
-                                    "Co-Travel Pattern",
-                                    "Zone Trespasser",
-                                    "Suspected Plate Swapper"
-                                ],
+                                labels: tagChartLabels,
                                 datasets: [{
                                     data: [19, 17, 14, 10, 7, 5],
                                     backgroundColor: colors,

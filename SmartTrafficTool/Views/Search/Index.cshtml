@@ -1,54 +1,55 @@
 @model SmartTrafficTool.ViewModels.HybridSearchViewModel
 @inject IConfiguration Configuration
 @{
-    ViewData["Title"] = "AI Forensic Search";
+    ViewData["Title"] = L["Title_AIForensicSearch"].Value;
     var mapsKey = Configuration["GoogleMaps:ApiKey"];
     string VehicleClassLabel(int? id) => id switch
     {
-        1 => "Sedan",
-        2 => "SUV",
-        3 => "Pickup",
-        4 => "Bus",
-        5 => "Truck",
-        _ => "—"
+        1 => L["Enum_Vehicle_Sedan"].Value,
+        2 => L["Enum_Vehicle_Suv"].Value,
+        3 => L["Enum_Vehicle_Pickup"].Value,
+        4 => L["Enum_Vehicle_Bus"].Value,
+        5 => L["Enum_Vehicle_Truck"].Value,
+        _ => L["Dash_EmDash"].Value
     };
 
     string PlateTypeLabel(int id) => id switch
     {
-        1 => "Private",
-        2 => "Commercial",
-        3 => "Government",
-        4 => "Transport",
-        5 => "Taxi",
-        _ => "Private"
+        1 => L["PlateType_Private"].Value,
+        2 => L["PlateType_Commercial"].Value,
+        3 => L["PlateType_Government"].Value,
+        4 => L["PlateType_Transport"].Value,
+        5 => L["PlateType_Taxi"].Value,
+        _ => L["PlateType_Private"].Value
     };
 
     string PlateCountryLabel(int id) => id switch
     {
-        1 => "Qatar",
-        2 => "UAE",
-        3 => "KSA",
-        4 => "Oman",
-        _ => "Qatar"
+        1 => L["Country_Qatar"].Value,
+        2 => L["Country_UAE"].Value,
+        3 => L["Country_Ksa"].Value,
+        4 => L["Country_Oman"].Value,
+        _ => L["Country_Qatar"].Value
     };
 
     var filterWindowKey = string.IsNullOrWhiteSpace(Model.FilterWindow) ? "24h" : Model.FilterWindow!;
     var filterWindowLabel = filterWindowKey switch
     {
-        "24h" => "Last 24 hours",
-        "48h" => "Last 48 hours",
-        "today" => "Today",
-        "7d" => "Last 7 days",
+        "24h" => L["Search_Window_Last24Hours"].Value,
+        "48h" => L["Search_Window_Last48Hours"].Value,
+        "today" => L["Search_Window_Today"].Value,
+        "7d" => L["Search_Window_Last7Days"].Value,
         _ => filterWindowKey
     };
-    var queryContextLabel = string.IsNullOrWhiteSpace(Model.Query) ? "Fleet-wide scope" : $"“{Model.Query}”";
+    var queryContextLabel = string.IsNullOrWhiteSpace(Model.Query) ? L["Search_FleetWideScopeLabel"].Value : $"\u201c{Model.Query}\u201d";
+    var resultsSummaryInline = string.Format(CultureInfo.CurrentUICulture, L["Search_ResultSummaryFmt"].Value, Model.TotalResults.ToString("N0", CultureInfo.CurrentUICulture), filterWindowLabel, queryContextLabel);
 
     string TransactionStatusLabel(int code) => code switch
     {
-        1 => "Cleared",
-        2 => "Under review",
-        3 => "Violation",
-        _ => "—"
+        1 => L["Search_TransStatus_Cleared"].Value,
+        2 => L["Search_TransStatus_UnderReview"].Value,
+        3 => L["Search_TransStatus_Violation"].Value,
+        _ => L["Dash_EmDash"].Value
     };
 
     string SearchListStatusPillClass(int code) => code switch
@@ -64,58 +65,58 @@
     <form method="get" asp-action="Index">
         <input type="hidden" id="currentViewInput" name="view" value="@Model.CurrentView" />
         <div class="d-flex flex-wrap gap-3 align-items-center">
-            <label class="investigation-mode-icon" title="Investigation Search">
+            <label class="investigation-mode-icon" title="@L["Search_InvestigationModeHint"]">
                 <input id="investigationModeToggle" name="investigationMode" type="checkbox" value="true" @(Model.IsInvestigationMode ? "checked" : null) />
                 <span class="investigation-mode-icon-shell" aria-hidden="true">
                     <i class="fa-solid fa-user-secret"></i>
                 </span>
             </label>
             <div class="flex-grow-1">
-                <input id="searchInput" name="q" class="form-control search-input" type="text" value="@Model.Query" placeholder="Search plate, vehicle, zone, or case ID..." />
+                <input id="searchInput" name="q" class="form-control search-input" type="text" value="@Model.Query" placeholder="@L["Search_PlatformPlaceholder"]" />
             </div>
-            <button id="searchMicBtn" class="btn btn-ghost" type="button" aria-label="Voice search"><i class="fa-solid fa-microphone"></i></button>
-            <button id="searchSubmitBtn" class="btn btn-accent" type="submit"><i class="fa-solid fa-magnifying-glass me-2"></i>Search</button>
-            <button id="resetFiltersBtn" class="btn btn-ghost" type="button"><i class="fa-solid fa-rotate-left me-2"></i>Reset Filters</button>
-            <button class="btn btn-ghost" type="button" data-toggle="filters"><i class="fa-solid fa-sliders me-2"></i>Filters</button>
+            <button id="searchMicBtn" class="btn btn-ghost" type="button" aria-label="@L["Search_VoiceSearchAria"]"><i class="fa-solid fa-microphone"></i></button>
+            <button id="searchSubmitBtn" class="btn btn-accent" type="submit"><i class="fa-solid fa-magnifying-glass me-2"></i>@L["Search_SubmitSearch"]</button>
+            <button id="resetFiltersBtn" class="btn btn-ghost" type="button"><i class="fa-solid fa-rotate-left me-2"></i>@L["Search_ResetFilters"]</button>
+            <button class="btn btn-ghost" type="button" data-toggle="filters"><i class="fa-solid fa-sliders me-2"></i>@L["Search_Filters"]</button>
         </div>
-        <div id="voiceStatus" class="stat-label mt-2">Voice input: idle</div>
+        <div id="voiceStatus" class="stat-label mt-2">@L["Search_VoiceStatusIdle"]</div>
         <div class="filter-panel">
             <div class="grid grid-3 mt-3">
                 <div>
-                    <label class="form-label">Plate Type</label>
+                    <label class="form-label">@L["Search_LabelPlateType"]</label>
                     <select id="plateTypeSelect" name="plateType" class="form-select search-input">
-                        <option value="All" selected="@(string.IsNullOrWhiteSpace(Model.FilterType) || Model.FilterType == "All")">All</option>
-                        <option value="Private" selected="@(Model.FilterType == "Private")">Private</option>
-                        <option value="Commercial" selected="@(Model.FilterType == "Commercial")">Commercial</option>
-                        <option value="Government" selected="@(Model.FilterType == "Government")">Government</option>
-                        <option value="Transport" selected="@(Model.FilterType == "Transport")">Transport</option>
-                        <option value="Taxi" selected="@(Model.FilterType == "Taxi")">Taxi</option>
+                        <option value="All" selected="@(string.IsNullOrWhiteSpace(Model.FilterType) || Model.FilterType == "All")">@L["Search_AllCountries"]</option>
+                        <option value="Private" selected="@(Model.FilterType == "Private")">@L["PlateType_Private"]</option>
+                        <option value="Commercial" selected="@(Model.FilterType == "Commercial")">@L["PlateType_Commercial"]</option>
+                        <option value="Government" selected="@(Model.FilterType == "Government")">@L["PlateType_Government"]</option>
+                        <option value="Transport" selected="@(Model.FilterType == "Transport")">@L["PlateType_Transport"]</option>
+                        <option value="Taxi" selected="@(Model.FilterType == "Taxi")">@L["PlateType_Taxi"]</option>
                     </select>
                     <input type="hidden" id="plateTypeRawInput" name="plateTypeRaw" value="@Model.FilterType" />
                 </div>
                 <div>
-                    <label class="form-label">Country</label>
+                    <label class="form-label">@L["Search_LabelCountry"]</label>
                     <select id="countrySelect" name="country" class="form-select search-input">
-                        <option value="All" selected="@(string.IsNullOrWhiteSpace(Model.FilterCountry) || Model.FilterCountry == "All")">All</option>
-                        <option value="Qatar" selected="@(Model.FilterCountry == "Qatar")">Qatar</option>
-                        <option value="UAE" selected="@(Model.FilterCountry == "UAE")">UAE</option>
-                        <option value="KSA" selected="@(Model.FilterCountry == "KSA")">KSA</option>
-                        <option value="Oman" selected="@(Model.FilterCountry == "Oman")">Oman</option>
+                        <option value="All" selected="@(string.IsNullOrWhiteSpace(Model.FilterCountry) || Model.FilterCountry == "All")">@L["Search_AllCountries"]</option>
+                        <option value="Qatar" selected="@(Model.FilterCountry == "Qatar")">@L["Country_Qatar"]</option>
+                        <option value="UAE" selected="@(Model.FilterCountry == "UAE")">@L["Country_UAE"]</option>
+                        <option value="KSA" selected="@(Model.FilterCountry == "KSA")">@L["Country_Ksa"]</option>
+                        <option value="Oman" selected="@(Model.FilterCountry == "Oman")">@L["Country_Oman"]</option>
                     </select>
                 </div>
                 <div>
-                    <label class="form-label">Time Window</label>
+                    <label class="form-label">@L["Search_LabelTimeWindow"]</label>
                     <select id="windowSelect" name="window" class="form-select search-input">
-                        <option value="24h" selected="@(Model.FilterWindow == "24h")">Last 24 Hours</option>
-                        <option value="48h" selected="@(Model.FilterWindow == "48h")">Last 48 Hours</option>
-                        <option value="today" selected="@(Model.FilterWindow == "today")">Today</option>
-                        <option value="7d" selected="@(Model.FilterWindow == "7d")">7 Days</option>
+                        <option value="24h" selected="@(Model.FilterWindow == "24h")">@L["Search_Window_Last24Hours"]</option>
+                        <option value="48h" selected="@(Model.FilterWindow == "48h")">@L["Search_Window_Last48Hours"]</option>
+                        <option value="today" selected="@(Model.FilterWindow == "today")">@L["Search_Window_Today"]</option>
+                        <option value="7d" selected="@(Model.FilterWindow == "7d")">@L["Search_TimeWindow_Last7DaysShort"]</option>
                     </select>
                 </div>
                 <div>
-                    <label class="form-label">Device</label>
+                    <label class="form-label">@L["Search_LabelDevice"]</label>
                     <select id="deviceIdInput" name="deviceId" class="form-select search-input">
-                        <option value="">All</option>
+                        <option value="">@L["Search_AllCountries"]</option>
                         @foreach (var device in Model.DeviceOptions)
                         {
                             <option value="@device.Id" selected="@(Model.FilterDeviceId == device.Id)">@device.Id - @device.Name</option>
@@ -123,15 +124,15 @@
                     </select>
                 </div>
                 <div class="filter-incident-scope">
-                    <label class="form-label">Incident scope</label>
+                    <label class="form-label">@L["Search_LabelIncidentScope"]</label>
                     <div class="d-flex flex-column gap-1 small">
                         <label class="form-check mb-0">
                             <input class="form-check-input" type="checkbox" name="alertsOnly" value="true" @(Model.FilterAlertsOnly ? "checked" : null) />
-                            <span class="form-check-label">Alerts only</span>
+                            <span class="form-check-label">@L["Search_AlertsOnly"]</span>
                         </label>
                         <label class="form-check mb-0">
                             <input class="form-check-input" type="checkbox" name="speedViolationsOnly" value="true" @(Model.FilterSpeedViolationsOnly ? "checked" : null) />
-                            <span class="form-check-label">Speed violations only (≥120 km/h)</span>
+                            <span class="form-check-label">@L["Search_SpeedViolationOnlyFmt"]</span>
                         </label>
                     </div>
                 </div>
@@ -143,9 +144,9 @@
 <div class="search-layout mt-4@(Model.IsInvestigationMode ? " search-layout--investigation" : "")">
     <div class="search-results-column">
         <div class="result-view-tabs">
-            <button class="btn btn-ghost btn-sm tab-btn @(Model.CurrentView == "map" ? "active" : "")" type="button" data-view="map">Map View</button>
-            <button class="btn btn-ghost btn-sm tab-btn @(Model.CurrentView == "card" ? "active" : "")" type="button" data-view="card">Card View</button>
-            <button class="btn btn-ghost btn-sm tab-btn @(Model.CurrentView == "list" ? "active" : "")" type="button" data-view="list">List View</button>
+            <button class="btn btn-ghost btn-sm tab-btn @(Model.CurrentView == "map" ? "active" : "")" type="button" data-view="map">@L["Search_ResultView_Map"]</button>
+            <button class="btn btn-ghost btn-sm tab-btn @(Model.CurrentView == "card" ? "active" : "")" type="button" data-view="card">@L["Search_ResultView_Card"]</button>
+            <button class="btn btn-ghost btn-sm tab-btn @(Model.CurrentView == "list" ? "active" : "")" type="button" data-view="list">@L["Search_ResultView_List"]</button>
         </div>
 
         <div id="mapView" class="result-view @(Model.CurrentView == "map" ? "active" : "")">
@@ -166,25 +167,26 @@
                     <div class="grid results-grid @(Model.IsInvestigationMode ? "" : "results-grid--standard")">
                         @foreach (var item in Model.Results)
                         {
-                            var plate = item.Transaction.PLATE_TEXT ?? "—";
+                            var plate = item.Transaction.PLATE_TEXT ?? L["Dash_EmDash"].Value;
                             var vehicleClass = VehicleClassLabel(item.Classification?.VEH_TYPE_ID);
                             var plateType = PlateTypeLabel(item.Transaction.PLATE_TYPE_ID);
                             var country = PlateCountryLabel(item.Transaction.PLATE_ORIGIN_ID);
                             var subtitle = $"{plateType} · {vehicleClass}";
                             var isAlert = item.Transaction.IS_ALERTED;
                             var riskClass = isAlert ? "map-popup-risk--high" : "map-popup-risk--low";
-                            var riskLabel = isAlert ? "High risk" : "Standard";
+                            var riskLabel = isAlert ? L["Search_Risk_High"].Value : L["Search_Risk_Low"].Value;
                             var flagCount = isAlert ? "1" : "0";
                             var localCap = item.Transaction.CREATED_DATE_TIME.ToLocalTime();
-                            var capturedShort = localCap.ToString("MMM d, hh:mm tt");
-                            var capturedDetail = localCap.ToString("M/d/yyyy, h:mm:ss tt");
-                            var deviceLabel = item.Device?.Name ?? $"Device {item.Transaction.DEVICE_ID}";
+                            var capturedShort = localCap.ToString("MMM d, hh:mm tt", CultureInfo.CurrentUICulture);
+                            var capturedDetail = localCap.ToString("G", CultureInfo.CurrentUICulture);
+                            var deviceLabel = item.Device?.Name ?? string.Format(CultureInfo.CurrentUICulture, L["Search_DevicePrefix"].Value, item.Transaction.DEVICE_ID);
                             var speedVal = item.Transaction.SPEED;
                             var speedText = $"{speedVal} km/h";
+                            var capturedLine = string.Format(CultureInfo.CurrentUICulture, L["Search_CapturedFmt"].Value, capturedDetail, speedText, item.Transaction.TRANSACTION_STATUS);
                             <div class="transaction-result-wrap">
                                 <article class="map-popup-card map-popup-card--transaction transaction-result-card">
                                     <div class="map-popup-media">
-                                        <img class="map-popup-image" src="/images/anpr/Anpr1.jpg" alt="Transaction frame" />
+                                        <img class="map-popup-image" src="/images/anpr/Anpr1.jpg" alt="@L["Search_Alt_Frame"]" />
                                         <div class="map-popup-plate-crop">
                                             <div class="map-popup-plate-text">@plate</div>
                                         </div>
@@ -212,37 +214,37 @@
                                         </div>
                                         <div class="map-popup-kpis">
                                             <div class="map-popup-kpi">
-                                                <span class="map-popup-kpi-label">Class</span>
+                                                <span class="map-popup-kpi-label">@L["Search_Kpi_Class"]</span>
                                                 <span class="map-popup-kpi-value">@vehicleClass</span>
                                             </div>
                                             <div class="map-popup-kpi">
-                                                <span class="map-popup-kpi-label">Origin</span>
+                                                <span class="map-popup-kpi-label">@L["Search_Kpi_Origin"]</span>
                                                 <span class="map-popup-kpi-value">@country</span>
                                             </div>
                                             <div class="map-popup-kpi">
-                                                <span class="map-popup-kpi-label">Flags</span>
+                                                <span class="map-popup-kpi-label">@L["Search_Kpi_Flags"]</span>
                                                 <span class="map-popup-kpi-value">@flagCount</span>
                                             </div>
                                         </div>
                                         <div class="map-popup-pill-row">
                                             @if (isAlert)
                                             {
-                                                <span class="map-popup-pill map-popup-pill--danger">Alert detection</span>
+                                                <span class="map-popup-pill map-popup-pill--danger">@L["Search_Pill_AlertDetection"]</span>
                                             }
                                             @if (speedVal >= 120)
                                             {
-                                                <span class="map-popup-pill map-popup-pill--warn">High speed</span>
+                                                <span class="map-popup-pill map-popup-pill--warn">@L["Search_Pill_HighSpeed"]</span>
                                             }
                                             @if (!isAlert && speedVal < 120)
                                             {
-                                                <span class="map-popup-pill map-popup-pill--neutral">ANPR read</span>
+                                                <span class="map-popup-pill map-popup-pill--neutral">@L["Search_Pill_AnprRead"]</span>
                                             }
                                         </div>
                                         <div class="map-popup-trans-meta-row">
                                             <span class="map-popup-meta-item"><i class="fa-solid fa-location-dot" aria-hidden="true"></i>@deviceLabel</span>
                                             <span class="map-popup-meta-item"><i class="fa-regular fa-clock" aria-hidden="true"></i>@capturedShort</span>
                                         </div>
-                                        <p class="map-popup-trans-detail">Captured @capturedDetail · Speed @speedText · Status @item.Transaction.TRANSACTION_STATUS</p>
+                                        <p class="map-popup-trans-detail">@capturedLine</p>
                                         <div class="map-popup-trans-actions">
                                             <button class="map-popup-foot-btn view-on-map-btn"
                                                     type="button"
@@ -250,15 +252,15 @@
                                                     data-lat="@(item.Device?.Latitude)"
                                                     data-lng="@(item.Device?.Longitude)"
                                                     data-time="@item.Transaction.CREATED_DATE_TIME.ToString("o")"
-                                                    data-device="@deviceLabel">View on map</button>
-                                            <a class="map-popup-foot-btn map-popup-foot-btn--ghost" asp-controller="Cases" asp-action="Index">Add to case</a>
+                                                    data-device="@deviceLabel">@L["Search_Btn_ViewOnMap"]</button>
+                                            <a class="map-popup-foot-btn map-popup-foot-btn--ghost" asp-controller="Cases" asp-action="Index">@L["Search_Btn_AddToCase"]</a>
                                             @if (Model.IsInvestigationMode)
                                             {
                                                 <button class="map-popup-foot-btn map-popup-foot-btn--accent live-track-btn"
                                                         type="button"
                                                         data-plate="@(item.Transaction.PLATE_TEXT ?? string.Empty)"
                                                         data-lat="@(item.Device?.Latitude)"
-                                                        data-lng="@(item.Device?.Longitude)">Live tracking</button>
+                                                        data-lng="@(item.Device?.Longitude)">@L["Search_Btn_LiveTrack"]</button>
                                             }
                                         </div>
                                     </div>
@@ -272,7 +274,7 @@
                 {
                     <div class="result-panel-footer">
                         <div class="d-flex align-items-center justify-content-between">
-                            <span class="stat-label">Page @Model.CurrentPage of @Model.TotalPages</span>
+                            <span class="stat-label">@string.Format(CultureInfo.CurrentUICulture, L["Search_PageOfPages"].Value, Model.CurrentPage, Model.TotalPages)</span>
                             <div class="d-flex gap-2">
                                 <a class="btn btn-ghost btn-sm pagination-link @(Model.CurrentPage <= 1 ? "disabled" : string.Empty)"
                                    asp-action="Index"
@@ -285,7 +287,7 @@
                                    asp-route-speedViolationsOnly="@Model.FilterSpeedViolationsOnly"
                                    asp-route-investigationMode="@Model.IsInvestigationMode"
                                    asp-route-view="@Model.CurrentView"
-                                   asp-route-page="@(Model.CurrentPage - 1)">Previous</a>
+                                   asp-route-page="@(Model.CurrentPage - 1)">@L["Search_PreviousPage"]</a>
                                 <a class="btn btn-ghost btn-sm pagination-link @(Model.CurrentPage >= Model.TotalPages ? "disabled" : string.Empty)"
                                    asp-action="Index"
                                    asp-route-q="@Model.Query"
@@ -297,7 +299,7 @@
                                    asp-route-speedViolationsOnly="@Model.FilterSpeedViolationsOnly"
                                    asp-route-investigationMode="@Model.IsInvestigationMode"
                                    asp-route-view="@Model.CurrentView"
-                                   asp-route-page="@(Model.CurrentPage + 1)">Next</a>
+                                   asp-route-page="@(Model.CurrentPage + 1)">@L["Search_NextPage"]</a>
                             </div>
                         </div>
                     </div>
@@ -312,27 +314,27 @@
                         <table class="table table-dark table-hover align-middle search-results-table">
                             <thead>
                                 <tr>
-                                    <th scope="col" class="search-list-th">Plate</th>
-                                    <th scope="col" class="search-list-th">Device</th>
-                                    <th scope="col" class="search-list-th search-list-th--num">Speed</th>
-                                    <th scope="col" class="search-list-th">Status</th>
-                                    <th scope="col" class="search-list-th">Alert</th>
-                                    <th scope="col" class="search-list-th">Captured</th>
-                                    <th scope="col" class="search-list-th">Vehicle</th>
-                                    <th scope="col" class="search-list-th search-list-th--actions"><span class="visually-hidden">Actions</span></th>
+                                    <th scope="col" class="search-list-th">@L["Search_List_Header_Plate"]</th>
+                                    <th scope="col" class="search-list-th">@L["Search_List_Header_Device"]</th>
+                                    <th scope="col" class="search-list-th search-list-th--num">@L["Search_List_Header_Speed"]</th>
+                                    <th scope="col" class="search-list-th">@L["Search_List_Header_Status"]</th>
+                                    <th scope="col" class="search-list-th">@L["Search_List_Header_Alert"]</th>
+                                    <th scope="col" class="search-list-th">@L["Search_List_Header_Captured"]</th>
+                                    <th scope="col" class="search-list-th">@L["Search_List_Header_Vehicle"]</th>
+                                    <th scope="col" class="search-list-th search-list-th--actions"><span class="visually-hidden">@L["Search_List_ActionsAria"]</span></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var item in Model.Results)
                                 {
-                                    var deviceLabel = item.Device?.Name ?? $"Device {item.Transaction.DEVICE_ID}";
+                                    var deviceLabelList = item.Device?.Name ?? string.Format(CultureInfo.CurrentUICulture, L["Search_DevicePrefix"].Value, item.Transaction.DEVICE_ID);
                                     var capLocal = item.Transaction.CREATED_DATE_TIME.ToLocalTime();
                                     <tr class="search-list-row">
                                         <td class="search-list-td search-list-td--plate">
-                                            <span class="search-list-plate">@(item.Transaction.PLATE_TEXT ?? "Unknown")</span>
+                                            <span class="search-list-plate">@(item.Transaction.PLATE_TEXT ?? L["Search_List_UnknownPlate"].Value)</span>
                                         </td>
                                         <td class="search-list-td">
-                                            <span class="search-list-device-name">@deviceLabel</span>
+                                            <span class="search-list-device-name">@deviceLabelList</span>
                                             <span class="search-list-device-id">#@item.Transaction.DEVICE_ID</span>
                                         </td>
                                         <td class="search-list-td search-list-td--speed">
@@ -364,14 +366,14 @@
                                                         data-lat="@(item.Device?.Latitude)"
                                                         data-lng="@(item.Device?.Longitude)"
                                                         data-time="@item.Transaction.CREATED_DATE_TIME.ToString("o")"
-                                                        data-device="@(item.Device?.Name ?? "Device")"><i class="fa-solid fa-map-location-dot me-1" aria-hidden="true"></i>View on Map</button>
+                                                        data-device="@(item.Device?.Name ?? L["Search_DeviceGeneric"].Value)"><i class="fa-solid fa-map-location-dot me-1" aria-hidden="true"></i>@L["Search_Btn_ViewOnMap"]</button>
                                                 @if (Model.IsInvestigationMode)
                                                 {
                                                     <button class="btn btn-ghost btn-sm search-list-action-btn live-track-btn"
                                                             type="button"
                                                             data-plate="@(item.Transaction.PLATE_TEXT ?? string.Empty)"
                                                             data-lat="@(item.Device?.Latitude)"
-                                                            data-lng="@(item.Device?.Longitude)"><i class="fa-solid fa-location-crosshairs me-1" aria-hidden="true"></i>Live Tracking</button>
+                                                            data-lng="@(item.Device?.Longitude)"><i class="fa-solid fa-location-crosshairs me-1" aria-hidden="true"></i>@L["Search_Btn_LiveTrack"]</button>
                                                 }
                                             </div>
                                         </td>
@@ -385,7 +387,7 @@
                 {
                     <div class="result-panel-footer">
                         <div class="d-flex align-items-center justify-content-between">
-                            <span class="stat-label">Page @Model.CurrentPage of @Model.TotalPages</span>
+                            <span class="stat-label">@string.Format(CultureInfo.CurrentUICulture, L["Search_PageOfPages"].Value, Model.CurrentPage, Model.TotalPages)</span>
                             <div class="d-flex gap-2">
                                 <a class="btn btn-ghost btn-sm pagination-link @(Model.CurrentPage <= 1 ? "disabled" : string.Empty)"
                                    asp-action="Index"
@@ -398,7 +400,7 @@
                                    asp-route-speedViolationsOnly="@Model.FilterSpeedViolationsOnly"
                                    asp-route-investigationMode="@Model.IsInvestigationMode"
                                    asp-route-view="@Model.CurrentView"
-                                   asp-route-page="@(Model.CurrentPage - 1)">Previous</a>
+                                   asp-route-page="@(Model.CurrentPage - 1)">@L["Search_PreviousPage"]</a>
                                 <a class="btn btn-ghost btn-sm pagination-link @(Model.CurrentPage >= Model.TotalPages ? "disabled" : string.Empty)"
                                    asp-action="Index"
                                    asp-route-q="@Model.Query"
@@ -410,7 +412,7 @@
                                    asp-route-speedViolationsOnly="@Model.FilterSpeedViolationsOnly"
                                    asp-route-investigationMode="@Model.IsInvestigationMode"
                                    asp-route-view="@Model.CurrentView"
-                                   asp-route-page="@(Model.CurrentPage + 1)">Next</a>
+                                   asp-route-page="@(Model.CurrentPage + 1)">@L["Search_NextPage"]</a>
                             </div>
                         </div>
                     </div>
@@ -420,10 +422,10 @@
     </div>
     @if (!Model.IsInvestigationMode)
     {
-        <aside class="search-insides-column investigation-section search-summary-sidebar" aria-label="Summary and charts">
+        <aside class="search-insides-column investigation-section search-summary-sidebar" aria-label="@L["Search_SidebarAria"]">
             <div class="card search-summary-card investigation-summary-card">
-                <h4 class="section-title section-title--sidebar"><i class="fa-solid fa-file-shield"></i><span>Inside Summary</span></h4>
-                <article class="map-popup-card map-popup-card--transaction map-popup-card--inside-summary inside-summary-card inside-summary--sidebar" aria-label="Inside summary">
+                <h4 class="section-title section-title--sidebar"><i class="fa-solid fa-file-shield"></i><span>@L["Search_InsideSummaryHeading"]</span></h4>
+                <article class="map-popup-card map-popup-card--transaction map-popup-card--inside-summary inside-summary-card inside-summary--sidebar" aria-label="@L["Search_SummaryCardAria"]">
                     <div class="inside-summary-accent" aria-hidden="true"></div>
                     <div class="map-popup-body">
                         <div class="map-popup-trans-head inside-summary-head">
@@ -433,25 +435,25 @@
                                 </div>
                                 <div class="map-popup-trans-titles">
                                     <div class="map-popup-title-row">
-                                        <h4 class="map-popup-plate-title inside-summary-title">Intelligence brief</h4>
+                                        <h4 class="map-popup-plate-title inside-summary-title">@L["Search_IntelBriefTitle"]</h4>
                                     </div>
                                     <p class="map-popup-trans-sub inside-summary-sub">
-                                        @Model.TotalResults.ToString("N0") result(s) · @filterWindowLabel · @queryContextLabel
+                                        @resultsSummaryInline
                                     </p>
                                 </div>
                             </div>
                         </div>
                         <div class="map-popup-kpis inside-summary-kpis">
                             <div class="map-popup-kpi">
-                                <span class="map-popup-kpi-label">Total reads</span>
+                                <span class="map-popup-kpi-label">@L["Search_KpiTotalReads"]</span>
                                 <span class="map-popup-kpi-value">@Model.TotalResults.ToString("N0")</span>
                             </div>
                             <div class="map-popup-kpi">
-                                <span class="map-popup-kpi-label">Distinct plates</span>
+                                <span class="map-popup-kpi-label">@L["Search_KpiDistinctPlates"]</span>
                                 <span class="map-popup-kpi-value">@Model.DistinctPlates.ToString("N0")</span>
                             </div>
                             <div class="map-popup-kpi">
-                                <span class="map-popup-kpi-label">Alerts</span>
+                                <span class="map-popup-kpi-label">@L["Search_KpiAlertsCount"]</span>
                                 <span class="map-popup-kpi-value">@Model.AlertCount.ToString("N0")</span>
                             </div>
                         </div>
@@ -459,7 +461,7 @@
                         @if (Model.InsightBullets.Count > 0)
                         {
                             <div class="inside-summary-insights">
-                                <div class="inside-summary-insights-label">Highlights</div>
+                                <div class="inside-summary-insights-label">@L["Search_Highlights"]</div>
                                 <ul class="inside-summary-insight-list" id="insideSummaryInsightList">
                                     @foreach (var insight in Model.InsightBullets)
                                     {
@@ -474,27 +476,27 @@
                     </div>
                 </article>
                 <div class="mt-3 d-flex gap-2 flex-wrap inside-summary-actions">
-                    <button class="btn btn-accent btn-sm" type="button"><i class="fa-solid fa-file-export me-2"></i>Generate Case File</button>
-                    <button id="ttsBtn" class="btn btn-ghost btn-sm" type="button"><i class="fa-solid fa-volume-high me-2"></i>Text-to-Speech</button>
+                    <button class="btn btn-accent btn-sm" type="button"><i class="fa-solid fa-file-export me-2"></i>@L["Search_GenerateCaseFile"]</button>
+                    <button id="ttsBtn" class="btn btn-ghost btn-sm" type="button"><i class="fa-solid fa-volume-high me-2"></i>@L["Js_SearchTTS"]</button>
                 </div>
             </div>
             <div class="search-sidebar-metrics-stack">
                 <div class="card search-sidebar-metric-card">
-                    <div class="stat-label">Plate Type</div>
+                    <div class="stat-label">@L["Search_LabelPlateType"]</div>
                     <div class="micro-chart">
                         <canvas id="plateTypeChart"></canvas>
                     </div>
                     <div id="plateTypeChartDetails" class="chart-detail-list"></div>
                 </div>
                 <div class="card search-sidebar-metric-card">
-                    <div class="stat-label">Plate Country</div>
+                    <div class="stat-label">@L["Search_LabelCountry"]</div>
                     <div class="micro-chart">
                         <canvas id="plateCountryChart"></canvas>
                     </div>
                     <div id="plateCountryChartDetails" class="chart-detail-list"></div>
                 </div>
                 <div class="card search-sidebar-metric-card">
-                    <div class="stat-label">Vehicle Classification</div>
+                    <div class="stat-label">@L["Search_Sidebar_VehicleClass"]</div>
                     <div class="micro-chart">
                         <canvas id="vehicleClassChart"></canvas>
                     </div>
@@ -509,16 +511,16 @@
         var coTravelDisplayList = coTravelIsDemo
             ? new List<string>
             {
-                "45231 S · 2 reads · ~4 min overlap",
-                "78102 K · adjacent corridor · Lusail",
-                "30988 M · parallel lane · West Bay"
+                L["Search_Inv_CoTravelDemoLine1"].Value,
+                L["Search_Inv_CoTravelDemoLine2"].Value,
+                L["Search_Inv_CoTravelDemoLine3"].Value
             }
             : Model.CoTravelPlates;
         var cidWantedActive = Model.WantedFlag.Contains("Wanted", StringComparison.OrdinalIgnoreCase);
         <div class="search-insides-column investigation-section">
             <div class="card investigation-summary-card">
-                <h4 class="section-title section-title--sidebar"><i class="fa-solid fa-file-shield"></i><span>Inside Summary</span></h4>
-                <article class="map-popup-card map-popup-card--transaction map-popup-card--inside-summary inside-summary-card inside-summary--sidebar" aria-label="Inside summary">
+                <h4 class="section-title section-title--sidebar"><i class="fa-solid fa-file-shield"></i><span>@L["Search_InsideSummaryHeading"]</span></h4>
+                <article class="map-popup-card map-popup-card--transaction map-popup-card--inside-summary inside-summary-card inside-summary--sidebar" aria-label="@L["Search_SummaryCardAria"]">
                     <div class="inside-summary-accent" aria-hidden="true"></div>
                     <div class="map-popup-body">
                         <div class="map-popup-trans-head inside-summary-head">
@@ -528,29 +530,29 @@
                                 </div>
                                 <div class="map-popup-trans-titles">
                                     <div class="map-popup-title-row">
-                                        <h4 class="map-popup-plate-title inside-summary-title">Intelligence brief</h4>
+                                        <h4 class="map-popup-plate-title inside-summary-title">@L["Search_IntelBriefTitle"]</h4>
                                         <div class="map-popup-risk map-popup-risk--warn">
                                             <span class="map-popup-risk-dot" aria-hidden="true"></span>
-                                            <span class="map-popup-risk-text">Investigation</span>
+                                            <span class="map-popup-risk-text">@L["Search_InvestigationBadge"]</span>
                                         </div>
                                     </div>
                                     <p class="map-popup-trans-sub inside-summary-sub">
-                                        @Model.TotalResults.ToString("N0") result(s) · @filterWindowLabel · @queryContextLabel
+                                        @resultsSummaryInline
                                     </p>
                                 </div>
                             </div>
                         </div>
                         <div class="map-popup-kpis inside-summary-kpis">
                             <div class="map-popup-kpi">
-                                <span class="map-popup-kpi-label">Total reads</span>
+                                <span class="map-popup-kpi-label">@L["Search_KpiTotalReads"]</span>
                                 <span class="map-popup-kpi-value">@Model.TotalResults.ToString("N0")</span>
                             </div>
                             <div class="map-popup-kpi">
-                                <span class="map-popup-kpi-label">Distinct plates</span>
+                                <span class="map-popup-kpi-label">@L["Search_KpiDistinctPlates"]</span>
                                 <span class="map-popup-kpi-value">@Model.DistinctPlates.ToString("N0")</span>
                             </div>
                             <div class="map-popup-kpi">
-                                <span class="map-popup-kpi-label">Alerts</span>
+                                <span class="map-popup-kpi-label">@L["Search_KpiAlertsCount"]</span>
                                 <span class="map-popup-kpi-value">@Model.AlertCount.ToString("N0")</span>
                             </div>
                         </div>
@@ -558,7 +560,7 @@
                         @if (Model.InsightBullets.Count > 0)
                         {
                             <div class="inside-summary-insights">
-                                <div class="inside-summary-insights-label">Highlights</div>
+                                <div class="inside-summary-insights-label">@L["Search_Highlights"]</div>
                                 <ul class="inside-summary-insight-list" id="insideSummaryInsightList">
                                     @foreach (var insight in Model.InsightBullets)
                                     {
@@ -578,8 +580,8 @@
                 <div class="investigation-intel-head">
                     <div class="investigation-intel-icon investigation-intel-icon--live" aria-hidden="true"><i class="fa-solid fa-location-crosshairs"></i></div>
                     <div class="investigation-intel-head-text">
-                        <h4 class="investigation-intel-title">Live Tracking</h4>
-                        <p class="investigation-intel-sub">Simulated radius around last detection · <strong>@(Model.LatestPlate ?? "—")</strong></p>
+                        <h4 class="investigation-intel-title">@L["Search_Inv_LiveTrackingTitle"]</h4>
+                        <p class="investigation-intel-sub">@string.Format(CultureInfo.CurrentUICulture, L["Search_Inv_LiveTrackingSubFmt"].Value, Model.LatestPlate ?? L["Dash_EnDash"].Value)</p>
                     </div>
                 </div>
                 <div class="investigation-intel-map-wrap">
@@ -596,8 +598,8 @@
                 <div class="investigation-intel-head">
                     <div class="investigation-intel-icon" aria-hidden="true"><i class="fa-solid fa-route"></i></div>
                     <div class="investigation-intel-head-text">
-                        <h4 class="investigation-intel-title">Historical Tracking</h4>
-                        <p class="investigation-intel-sub">Ordered sightings · plate <strong>@(Model.SelectedPlate ?? "N/A")</strong></p>
+                        <h4 class="investigation-intel-title">@L["Search_Inv_HistoricalTitle"]</h4>
+                        <p class="investigation-intel-sub">@string.Format(CultureInfo.CurrentUICulture, L["Search_Inv_HistoricalSubFmt"].Value, Model.SelectedPlate ?? L["Dash_NotAvailableShort"].Value)</p>
                     </div>
                 </div>
                 <div class="investigation-intel-body">
@@ -605,7 +607,7 @@
                     {
                         <div class="investigation-intel-empty">
                             <i class="fa-regular fa-map" aria-hidden="true"></i>
-                            <span>No timeline rows yet. Run a plate search and open results to populate this trail.</span>
+                            <span>@L["Search_Inv_HistoricalEmpty"]</span>
                         </div>
                     }
                     else
@@ -627,8 +629,8 @@
                 <div class="investigation-intel-head">
                     <div class="investigation-intel-icon investigation-intel-icon--teal" aria-hidden="true"><i class="fa-solid fa-car-side"></i></div>
                     <div class="investigation-intel-head-text">
-                        <h4 class="investigation-intel-title">Co-Travel Vehicles</h4>
-                        <p class="investigation-intel-sub">Same time window · proximity heuristic</p>
+                        <h4 class="investigation-intel-title">@L["Search_Inv_CoTravelTitle"]</h4>
+                        <p class="investigation-intel-sub">@L["Search_Inv_CoTravelSub"]</p>
                     </div>
                 </div>
                 <div class="investigation-intel-body">
@@ -636,7 +638,7 @@
                     {
                         <div class="investigation-intel-demo-banner" role="note">
                             <i class="fa-solid fa-flask" aria-hidden="true"></i>
-                            <span>Illustrative matches (no live co-travel feed for this query).</span>
+                            <span>@L["Search_Inv_CoTravelDemoNote"]</span>
                         </div>
                     }
                     <ul class="investigation-intel-list">
@@ -655,18 +657,18 @@
                 <div class="investigation-intel-head">
                     <div class="investigation-intel-icon investigation-intel-icon--warn" aria-hidden="true"><i class="fa-solid fa-user-shield"></i></div>
                     <div class="investigation-intel-head-text">
-                        <h4 class="investigation-intel-title">CID / Wanted List</h4>
-                        <p class="investigation-intel-sub">Flag intelligence · risk estimate</p>
+                        <h4 class="investigation-intel-title">@L["Search_Inv_CidTitle"]</h4>
+                        <p class="investigation-intel-sub">@L["Search_Inv_CidSub"]</p>
                     </div>
                 </div>
                 <div class="investigation-intel-body">
                     <div class="investigation-intel-metrics">
                         <div class="investigation-intel-metric">
-                            <span class="investigation-intel-metric-label">Flag status</span>
+                            <span class="investigation-intel-metric-label">@L["Search_Inv_FlagStatus"]</span>
                             <span class="investigation-intel-metric-value @(cidWantedActive ? "investigation-intel-metric-value--danger" : "")">@Model.WantedFlag</span>
                         </div>
                         <div class="investigation-intel-metric">
-                            <span class="investigation-intel-metric-label">Risk score</span>
+                            <span class="investigation-intel-metric-label">@L["Search_Inv_RiskScore"]</span>
                             <span class="investigation-intel-metric-value">@(Math.Min(Model.ViolationsCount * 12, 100))%</span>
                         </div>
                     </div>
@@ -677,13 +679,13 @@
                 <div class="investigation-intel-head">
                     <div class="investigation-intel-icon investigation-intel-icon--gold" aria-hidden="true"><i class="fa-solid fa-receipt"></i></div>
                     <div class="investigation-intel-head-text">
-                        <h4 class="investigation-intel-title">Traffic Fines</h4>
-                        <p class="investigation-intel-sub">Linked violations · estimated liability</p>
+                        <h4 class="investigation-intel-title">@L["Search_Inv_FinesTitle"]</h4>
+                        <p class="investigation-intel-sub">@L["Search_Inv_FinesSub"]</p>
                     </div>
                 </div>
                 <div class="investigation-intel-body">
                     <div class="investigation-intel-highlight">@Model.TrafficFines</div>
-                    <p class="investigation-intel-foot">Last ticket on file: <strong>2 days ago</strong> (demo ledger).</p>
+                    <p class="investigation-intel-foot">@L["Search_Inv_FinesFootDemo"]</p>
                 </div>
             </div>
             <div class="card investigation-intel-card">
@@ -691,17 +693,17 @@
                 <div class="investigation-intel-head">
                     <div class="investigation-intel-icon investigation-intel-icon--purple" aria-hidden="true"><i class="fa-solid fa-id-card"></i></div>
                     <div class="investigation-intel-head-text">
-                        <h4 class="investigation-intel-title">Owner Intelligence</h4>
-                        <p class="investigation-intel-sub">Registry snapshot · points balance</p>
+                        <h4 class="investigation-intel-title">@L["Search_Inv_OwnerTitle"]</h4>
+                        <p class="investigation-intel-sub">@L["Search_Inv_OwnerSub"]</p>
                     </div>
                 </div>
                 <div class="investigation-intel-body">
                     <div class="investigation-intel-block">
-                        <span class="investigation-intel-block-label">Registered party</span>
+                        <span class="investigation-intel-block-label">@L["Search_Inv_RegParty"]</span>
                         <p class="investigation-intel-block-value">@Model.OwnerInfo</p>
                     </div>
                     <div class="investigation-intel-block investigation-intel-block--compact">
-                        <span class="investigation-intel-block-label">License points</span>
+                        <span class="investigation-intel-block-label">@L["Search_Inv_LicensePoints"]</span>
                         <p class="investigation-intel-block-value investigation-intel-block-value--mono">@Model.LicensePoints</p>
                     </div>
                 </div>
@@ -731,6 +733,11 @@
             "rgba(153, 12, 12, 1)",
             "rgba(90, 0, 0, 1)"
         ];
+
+        function smartTrafficLbl(key, fallback) {
+            const o = window.smartTrafficI18n || {};
+            return o[key] || fallback;
+        }
 
         function transactionHitTargetIcon() {
             return {
@@ -1016,6 +1023,8 @@
         }
 
         function buildMapPopupCard(data, recordIndex = 0, recordTotal = 1) {
+            const TI = window.smartTrafficI18n || {};
+            const tz = (k, fb) => TI[k] || fb;
             const plate = escapeHtml(data.plate || "Plate");
             const device = escapeHtml(data.device || "Device");
             const captured = data.time
@@ -1041,39 +1050,44 @@
             const vehicle = escapeHtml(data.vehicle || "—");
             const plateType = escapeHtml(data.plateType || "—");
             const country = escapeHtml(data.country || "—");
-            const status = escapeHtml(`${data.status ?? "—"}`);
+            const statusRaw = `${data.status ?? "—"}`;
+            const status = escapeHtml(statusRaw);
             const isAlert = !!data.alert;
             const speed = Number.isFinite(data.speed) ? `${data.speed} km/h` : "—";
             const riskClass = isAlert ? "map-popup-risk--high" : "map-popup-risk--low";
-            const riskLabel = isAlert ? "High risk" : "Standard";
+            const riskLabel = isAlert ? tz("mapRiskHigh", "High-risk") : tz("mapRiskStandard", "Standard");
             const flagCount = isAlert ? "1" : "0";
             const subtitle = `${plateType} · ${vehicle}`;
             const liveTrackingButtonHtml = isInvestigationSearchOn()
-                ? "<button class=\"map-popup-foot-btn map-popup-foot-btn--accent popup-live-track-btn\" type=\"button\">Live tracking</button>"
+                ? `<button class="map-popup-foot-btn map-popup-foot-btn--accent popup-live-track-btn" type="button">${escapeHtml(tz("mapLiveTrack", "Live tracking"))}</button>`
                 : "";
             const showNav = recordTotal > 1;
             const navHtml = showNav
                 ? `<div class="map-popup-nav">
-                        <button type="button" class="map-popup-nav-btn map-popup-nav-prev">Previous</button>
+                        <button type="button" class="map-popup-nav-btn map-popup-nav-prev">${escapeHtml(tz("mapPrev", "Back"))}</button>
                         <span class="map-popup-nav-index">${recordIndex + 1} / ${recordTotal}</span>
-                        <button type="button" class="map-popup-nav-btn map-popup-nav-next">Next</button>
+                        <button type="button" class="map-popup-nav-btn map-popup-nav-next">${escapeHtml(tz("mapNext", "Forward"))}</button>
                    </div>`
                 : "";
             const tagRisk = isAlert
-                ? "<span class=\"map-popup-pill map-popup-pill--danger\">Alert detection</span>"
+                ? `<span class="map-popup-pill map-popup-pill--danger">${escapeHtml(tz("mapAlertPill", "Alert read"))}</span>`
                 : "";
             const speedNum = Number.isFinite(data.speed) ? data.speed : 0;
             let tagSecond = "";
             if (speedNum >= 120) {
-                tagSecond = "<span class=\"map-popup-pill map-popup-pill--warn\">High speed</span>";
+                tagSecond = `<span class="map-popup-pill map-popup-pill--warn">${escapeHtml(tz("pillHighSpeed", "High speed"))}</span>`;
             } else if (!isAlert) {
-                tagSecond = "<span class=\"map-popup-pill map-popup-pill--neutral\">ANPR read</span>";
+                tagSecond = `<span class="map-popup-pill map-popup-pill--neutral">${escapeHtml(tz("pillAnpr", "ANPR read"))}</span>`;
             }
+            const detailLineHuman = escapeHtml((TI.mapCapturedFmt || "Captured {0} · Speed {1} · Status {2}")
+                .replace("{0}", captured)
+                .replace("{1}", speed)
+                .replace("{2}", statusRaw));
 
             return `
                 <div class="map-popup-card map-popup-card--transaction" data-lat="${data.lat}" data-lng="${data.lng}">
                     <div class="map-popup-media">
-                        <img class="map-popup-image" src="/images/anpr/Anpr1.jpg" alt="Transaction frame" />
+                        <img class="map-popup-image" src="/images/anpr/Anpr1.jpg" alt="Snapshot" />
                         <div class="map-popup-plate-crop">
                             <div class="map-popup-plate-text">${plate}</div>
                         </div>
@@ -1102,15 +1116,15 @@
                         </div>
                         <div class="map-popup-kpis">
                             <div class="map-popup-kpi">
-                                <span class="map-popup-kpi-label">Class</span>
+                                <span class="map-popup-kpi-label">${escapeHtml(tz("kpiClass", "Classification"))}</span>
                                 <span class="map-popup-kpi-value">${vehicle}</span>
                             </div>
                             <div class="map-popup-kpi">
-                                <span class="map-popup-kpi-label">Origin</span>
+                                <span class="map-popup-kpi-label">${escapeHtml(tz("kpiOrigin", "Plate origin"))}</span>
                                 <span class="map-popup-kpi-value">${country}</span>
                             </div>
                             <div class="map-popup-kpi">
-                                <span class="map-popup-kpi-label">Flags</span>
+                                <span class="map-popup-kpi-label">${escapeHtml(tz("kpiFlags", "Indicators"))}</span>
                                 <span class="map-popup-kpi-value">${flagCount}</span>
                             </div>
                         </div>
@@ -1119,10 +1133,10 @@
                             <span class="map-popup-meta-item"><i class="fa-solid fa-location-dot" aria-hidden="true"></i>${device}</span>
                             <span class="map-popup-meta-item"><i class="fa-regular fa-clock" aria-hidden="true"></i>${capturedShort}</span>
                         </div>
-                        <p class="map-popup-trans-detail">Captured ${captured} · Speed ${speed} · Status ${status}</p>
+                        <p class="map-popup-trans-detail">${detailLineHuman}</p>
                         <div class="map-popup-trans-actions">
-                            <button type="button" class="map-popup-foot-btn popup-center-map-btn">View on map</button>
-                            <a class="map-popup-foot-btn map-popup-foot-btn--ghost" href="@(Url.Action("Index", "Cases"))">Add to case</a>
+                            <button type="button" class="map-popup-foot-btn popup-center-map-btn">${escapeHtml(tz("mapViewOnMap", "Focus map"))}</button>
+                            <a class="map-popup-foot-btn map-popup-foot-btn--ghost" href="@(Url.Action("Index", "Cases"))">${escapeHtml(tz("mapAddCase", "Add to case"))}</a>
                             ${liveTrackingButtonHtml}
                         </div>
                     </div>
@@ -1472,7 +1486,7 @@
             toggleButton.id = "trackingToggleBtn";
             toggleButton.type = "button";
             toggleButton.className = "btn btn-ghost map-widget-btn";
-            toggleButton.textContent = isTracking ? "Stop Tracking" : "Start Tracking";
+            toggleButton.textContent = isTracking ? smartTrafficLbl("mapStopTracking", "Stop tracking") : smartTrafficLbl("mapStartTracking", "Start tracking");
             toggleButton.addEventListener("click", () => {
                 if (isTracking) {
                     stopTracking();
@@ -1485,7 +1499,7 @@
             clearButton.id = "trackingClearBtn";
             clearButton.type = "button";
             clearButton.className = "btn btn-ghost map-widget-btn";
-            clearButton.textContent = "Clear Tracking";
+            clearButton.textContent = smartTrafficLbl("mapClearTracking", "Clear tracking");
             clearButton.addEventListener("click", () => {
                 clearTrackingOverlay();
             });
@@ -1499,7 +1513,7 @@
         function setTrackingToggleLabel() {
             const btn = trackingToggleControl || document.getElementById("trackingToggleBtn");
             if (btn) {
-                btn.textContent = isTracking ? "Stop Tracking" : "Start Tracking";
+                btn.textContent = isTracking ? smartTrafficLbl("mapStopTracking", "Stop tracking") : smartTrafficLbl("mapStartTracking", "Start tracking");
             }
         }
 
@@ -1735,14 +1749,17 @@
                 return;
             }
 
+            const TI = window.smartTrafficI18n || {};
+            const tz = (k, fb) => TI[k] || fb;
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
-                micBtn.title = "Voice search not supported in this browser.";
+                micBtn.title = tz("searchMicUnsupportedTitle", "Voice search unsupported in this browser.");
                 return;
             }
 
             const recognition = new SpeechRecognition();
-            recognition.lang = "en-US";
+            const culture = window.smartTrafficCulture || "en-QA";
+            recognition.lang = culture.toLowerCase().startsWith("ar") ? "ar-QA" : "en-QA";
             recognition.interimResults = false;
             recognition.maxAlternatives = 1;
 
@@ -1771,7 +1788,7 @@
                 }
                 const status = document.getElementById("voiceStatus");
                 if (status) {
-                    status.textContent = "Listening...";
+                    status.textContent = tz("searchVoiceListening", "Listening…");
                 }
             });
 
@@ -1785,7 +1802,7 @@
                 lastInputSource = "mic";
                 const status = document.getElementById("voiceStatus");
                 if (status) {
-                    status.textContent = `Heard: "${transcript}" — processing...`;
+                    status.textContent = (tz("searchVoiceHeardFmt", 'Heard "{0}" — processing...')).replace("{0}", transcript);
                 }
                 const parsed = parseVoiceQuery(transcript);
                 input.value = parsed.queryText;
@@ -1798,7 +1815,7 @@
                 micBtn.classList.remove("btn-accent");
                 const status = document.getElementById("voiceStatus");
                 if (status && !isProcessing) {
-                    status.textContent = "Voice input: idle";
+                    status.textContent = tz("searchVoiceIdle", "Voice input idle");
                 }
             });
 
@@ -1808,7 +1825,7 @@
                 micBtn.classList.remove("btn-accent");
                 const status = document.getElementById("voiceStatus");
                 if (status) {
-                    status.textContent = "Voice input: error. Try again.";
+                    status.textContent = tz("searchVoiceError", "Voice capture failed.");
                 }
             });
 
@@ -1885,7 +1902,8 @@
                                 label: (context) => {
                                     const value = context.raw || 0;
                                     const percent = total > 0 ? Math.round((value / total) * 100) : 0;
-                                    return `${context.label}: ${value} (${percent}%)`;
+                                    const fmt = (window.smartTrafficI18n && window.smartTrafficI18n.chartPieTooltipFmt) || "{0}: {1} ({2}%)";
+                                    return fmt.replace("{0}", context.label).replace("{1}", String(value)).replace("{2}", String(percent));
                                 }
                             }
                         }
@@ -1897,12 +1915,18 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             const ttsBtn = document.getElementById("ttsBtn");
+            const TI = window.smartTrafficI18n || {};
+            const tz = (k, fb) => TI[k] || fb;
             if (!ttsBtn || !("speechSynthesis" in window)) {
                 if (ttsBtn) {
-                    ttsBtn.title = "Text-to-speech not supported in this browser.";
+                    ttsBtn.title = tz("ttsUnsupported", "Speech synthesis unsupported in this browser.");
                 }
                 return;
             }
+
+            const readLabel = () => tz("ttsButton", "Read aloud summary");
+            const stopLabel = () => tz("ttsStopButton", "Stop playback");
+            ttsBtn.textContent = readLabel();
 
             let isSpeaking = false;
             let preferredVoice = null;
@@ -1912,10 +1936,13 @@
                 if (!voices || voices.length === 0) {
                     return;
                 }
-                const female = voices.find(v =>
-                    /female|woman|zira|susan|sara|jenny|aria|nora|emma|olivia|linda/i.test(v.name)
-                );
-                preferredVoice = female || voices[0];
+                const culture = window.smartTrafficCulture || "en-QA";
+                const wantAr = culture.toLowerCase().startsWith("ar");
+                const langPrefix = wantAr ? "ar" : "en";
+                const byLang = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(langPrefix));
+                const femaleEn = voices.find(v =>
+                    /female|woman|zira|susan|sara|jenny|aria|nora|emma|olivia|linda/i.test(v.name));
+                preferredVoice = byLang || femaleEn || voices[0];
             };
 
             pickVoice();
@@ -1924,7 +1951,7 @@
                 if (isSpeaking) {
                     window.speechSynthesis.cancel();
                     isSpeaking = false;
-                    ttsBtn.textContent = "Text-to-Speech";
+                    ttsBtn.textContent = readLabel();
                     return;
                 }
 
@@ -1938,7 +1965,7 @@
                 }
 
                 const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = "en-US";
+                utterance.lang = (window.smartTrafficCulture || "").toLowerCase().startsWith("ar") ? "ar-QA" : "en-QA";
                 utterance.rate = 0.95;
                 utterance.pitch = 1.1;
                 if (preferredVoice) {
@@ -1946,15 +1973,15 @@
                 }
                 utterance.onend = () => {
                     isSpeaking = false;
-                    ttsBtn.textContent = "Text-to-Speech";
+                    ttsBtn.textContent = readLabel();
                 };
                 utterance.onerror = () => {
                     isSpeaking = false;
-                    ttsBtn.textContent = "Text-to-Speech";
+                    ttsBtn.textContent = readLabel();
                 };
 
                 isSpeaking = true;
-                ttsBtn.textContent = "Stop TTS";
+                ttsBtn.textContent = stopLabel();
                 window.speechSynthesis.speak(utterance);
             });
         });

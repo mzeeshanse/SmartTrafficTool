@@ -1,8 +1,15 @@
 @model SmartTrafficTool.ViewModels.PocRouteSimulatorViewModel
-@using System.Text.Json
 @{
-    ViewData["Title"] = "POC route simulator";
+    ViewData["Title"] = L["Title_PocRouteSimulator"].Value;
+    ViewData["PageSubtitle"] = L["Poc_PageSubtitleDefault"].Value;
     var initialPathJson = JsonSerializer.Serialize(Model.PathDeviceIds ?? []);
+    var pocI18nJson = JsonSerializer.Serialize(new
+    {
+        deviceFmt = L["Poc_DeviceNumberFmt"].Value,
+        moveUp = L["Poc_ButtonMoveUp"].Value,
+        moveDown = L["Poc_ButtonMoveDown"].Value,
+        remove = L["Poc_ButtonRemove"].Value,
+    });
 }
 
 @if (TempData["PocDemoSuccess"] is string ok && !string.IsNullOrWhiteSpace(ok))
@@ -16,35 +23,34 @@
 }
 
 <div class="card mb-4">
-    <h2 class="section-title mb-2"><i class="fa-solid fa-route me-2" aria-hidden="true"></i>Simulate vehicle path</h2>
-    <p class="stat-label mb-4">
-        Define plate metadata and <strong>captured date (UTC)</strong>, then build an <strong>ordered list of ANPR cameras</strong>. One transaction is inserted per camera with monotonic times along the path; only the <strong>calendar date</strong> is taken from your selection — the simulated time-of-day spacing is preserved. For <strong>today (UTC)</strong>, timestamps stay within the rolling last-24-hours window. For other dates, the same time pattern is placed on that day so you can backfill demo data. You can <strong>save</strong> a path by name and <strong>load</strong> it later from the list.
-    </p>
+    <h2 class="section-title mb-2"><i class="fa-solid fa-route me-2" aria-hidden="true"></i>@L["Poc_PageTitleHeading"]</h2>
+    <p class="stat-label mb-4">@L["Poc_PageIntroParagraph"]</p>
 
     <div class="poc-saved-path-toolbar glass p-3 rounded-3 border border-secondary border-opacity-25 mb-4">
         <div class="row g-2 align-items-end">
             <div class="col-md-6">
-                <label class="form-label mb-1" for="pocSavedRouteSelect">Saved paths</label>
+                <label class="form-label mb-1" for="pocSavedRouteSelect">@L["Poc_SavedPathsLabel"]</label>
                 <select id="pocSavedRouteSelect" class="form-select form-select-sm">
-                    <option value="">— Select a saved path —</option>
+                    <option value="">@L["Poc_SelectSavedPath"]</option>
                     @foreach (var s in Model.SavedPaths)
                     {
+                        var cnt = string.Format(CultureInfo.CurrentUICulture, L["Poc_CameraCountFmt"].Value, s.CameraCount);
                         if (Model.SelectedSavedRouteId == s.Id)
                         {
-                            <option value="@s.Id" data-device-ids="@s.DeviceIdsCsv" selected="selected">@s.Name (@s.CameraCount camera(s))</option>
+                            <option value="@s.Id" data-device-ids="@s.DeviceIdsCsv" selected="selected">@s.Name (@cnt)</option>
                         }
                         else
                         {
-                            <option value="@s.Id" data-device-ids="@s.DeviceIdsCsv">@s.Name (@s.CameraCount camera(s))</option>
+                            <option value="@s.Id" data-device-ids="@s.DeviceIdsCsv">@s.Name (@cnt)</option>
                         }
                     }
                 </select>
             </div>
             <div class="col-md-6 d-flex flex-wrap gap-2">
-                <button type="button" class="btn btn-outline-light btn-sm" id="pocLoadSavedBtn" title="Replace current path with selection">
-                    <i class="fa-solid fa-folder-open me-1" aria-hidden="true"></i>Load path
+                <button type="button" class="btn btn-outline-light btn-sm" id="pocLoadSavedBtn" title="@L["Poc_LoadPathTooltip"]">
+                    <i class="fa-solid fa-folder-open me-1" aria-hidden="true"></i>@L["Poc_LoadPath"]
                 </button>
-                <a class="btn btn-ghost btn-sm" asp-action="Index" title="Clear route query">Reset view</a>
+                <a class="btn btn-ghost btn-sm" asp-action="Index" title="@L["Poc_ResetViewTooltip"]">@L["Poc_ResetView"]</a>
             </div>
         </div>
     </div>
@@ -54,12 +60,12 @@
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
         <div class="mb-3">
-            <label class="form-label">Camera path (order = travel direction)</label>
+            <label class="form-label">@L["Poc_LabelCameraPathOrdered"]</label>
             <div class="poc-path-builder glass p-3 rounded-3 border border-secondary border-opacity-25">
                 <div class="row g-2 align-items-end mb-3">
                     <div class="col-md-8">
                         <select id="pocPickDevice" class="form-select form-select-sm">
-                            <option value="">— Select camera to add —</option>
+                            <option value="">@L["Poc_SelectCameraToAdd"]</option>
                             @foreach (var d in Model.AnprCameras)
                             {
                                 <option value="@d.Id">@d.Id — @d.Name (@d.LocationDescription)</option>
@@ -67,12 +73,12 @@
                         </select>
                     </div>
                     <div class="col-md-4 d-flex gap-2">
-                        <button type="button" class="btn btn-outline-light btn-sm flex-grow-1" id="pocAddDevice">Add to path</button>
-                        <button type="button" class="btn btn-ghost btn-sm" id="pocClearPath" title="Clear path">Clear</button>
+                        <button type="button" class="btn btn-outline-light btn-sm flex-grow-1" id="pocAddDevice">@L["Poc_AddToPath"]</button>
+                        <button type="button" class="btn btn-ghost btn-sm" id="pocClearPath" title="@L["Poc_ClearPathTooltip"]">@L["Poc_ClearPath"]</button>
                     </div>
                 </div>
                 <ul id="pocPathList" class="list-group list-group-flush poc-path-list mb-0"></ul>
-                <p id="pocPathEmpty" class="stat-label mb-0 mt-2 @((Model.PathDeviceIds?.Count ?? 0) > 0 ? "d-none" : "")">No cameras in path yet.</p>
+                <p id="pocPathEmpty" class="stat-label mb-0 mt-2 @((Model.PathDeviceIds?.Count ?? 0) > 0 ? "d-none" : "")">@L["Poc_NoCamerasInPath"]</p>
                 <div id="pocPathFields"></div>
             </div>
             <span asp-validation-for="PathDeviceIds" class="text-danger small"></span>
@@ -80,49 +86,49 @@
 
         <div class="grid grid-2 mb-3">
             <div>
-                <label asp-for="CapturedDate" class="form-label">Captured date (UTC)</label>
+                <label asp-for="CapturedDate" class="form-label">@L["Poc_LabelCapturedDateUtc"]</label>
                 <input asp-for="CapturedDate" type="date" class="form-control" />
                 <span asp-validation-for="CapturedDate" class="text-danger small"></span>
-                <div class="form-text small text-secondary">Replaces only the date on captured time; hop-to-hop times stay the same.</div>
+                <div class="form-text small text-secondary">@L["Poc_DateUtcHelp"]</div>
             </div>
             <div>
-                <label asp-for="PlateText" class="form-label">Plate text</label>
-                <input asp-for="PlateText" class="form-control" maxlength="16" placeholder="e.g. Q123456" autocomplete="off" />
+                <label asp-for="PlateText" class="form-label">@L["Poc_LabelPlateText"]</label>
+                <input asp-for="PlateText" class="form-control" maxlength="16" placeholder="@L["Poc_PlaceholderPlateExample"]" autocomplete="off" />
                 <span asp-validation-for="PlateText" class="text-danger small"></span>
             </div>
         </div>
         <div class="grid grid-2 mb-3">
             <div>
-                <label asp-for="PlateType" class="form-label">Plate type</label>
+                <label asp-for="PlateType" class="form-label">@L["Poc_LabelPlateTypeOption"]</label>
                 <select asp-for="PlateType" class="form-select">
-                    <option value="Private">Private</option>
-                    <option value="Commercial">Commercial</option>
-                    <option value="Government">Government</option>
-                    <option value="Transport">Transport</option>
-                    <option value="Taxi">Taxi</option>
+                    <option value="Private">@L["PlateType_Private"]</option>
+                    <option value="Commercial">@L["PlateType_Commercial"]</option>
+                    <option value="Government">@L["PlateType_Government"]</option>
+                    <option value="Transport">@L["PlateType_Transport"]</option>
+                    <option value="Taxi">@L["PlateType_Taxi"]</option>
                 </select>
             </div>
             <div>
-                <label asp-for="Country" class="form-label">Country</label>
+                <label asp-for="Country" class="form-label">@L["Poc_LabelCountryOption"]</label>
                 <select asp-for="Country" class="form-select">
-                    <option value="Qatar">Qatar</option>
-                    <option value="UAE">UAE</option>
-                    <option value="KSA">KSA</option>
-                    <option value="Oman">Oman</option>
+                    <option value="Qatar">@L["Country_Qatar"]</option>
+                    <option value="UAE">@L["Country_UAE"]</option>
+                    <option value="KSA">@L["Country_Ksa"]</option>
+                    <option value="Oman">@L["Country_Oman"]</option>
                 </select>
             </div>
         </div>
 
         <div class="mb-3 poc-save-path-row glass p-3 rounded-3 border border-secondary border-opacity-25">
-            <div class="fw-semibold small mb-2 text-secondary">Save current path</div>
+            <div class="fw-semibold small mb-2 text-secondary">@L["Poc_SavePathSectionTitle"]</div>
             <div class="row g-2 align-items-end">
                 <div class="col-md-8">
-                    <label class="form-label mb-1" for="savePathNameInput">Path name</label>
-                    <input type="text" id="savePathNameInput" name="savePathName" form="pocSavePathForm" class="form-control form-control-sm" maxlength="120" placeholder="e.g. West Bay loop" autocomplete="off" />
+                    <label class="form-label mb-1" for="savePathNameInput">@L["Poc_LabelPathName"]</label>
+                    <input type="text" id="savePathNameInput" name="savePathName" form="pocSavePathForm" class="form-control form-control-sm" maxlength="120" placeholder="@L["Poc_PlaceholderPathName"]" autocomplete="off" />
                 </div>
                 <div class="col-md-4">
                     <button type="submit" form="pocSavePathForm" class="btn btn-outline-warning btn-sm w-100" id="pocSavePathSubmit">
-                        <i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i>Save path
+                        <i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i>@L["Poc_SavePathButton"]
                     </button>
                 </div>
             </div>
@@ -131,18 +137,18 @@
         <div class="mb-4 d-flex flex-wrap gap-3">
             <label class="form-check">
                 <input asp-for="AlertOnLastSite" class="form-check-input" />
-                <span class="form-check-label">Alert on <strong>last</strong> camera only</span>
+                <span class="form-check-label">@L["Poc_AlertLastOnlyLabel"]</span>
             </label>
             <label class="form-check">
                 <input asp-for="SpeedViolationOnLastSite" class="form-check-input" />
-                <span class="form-check-label">Speed violation (≥120 km/h) on <strong>last</strong> camera only</span>
+                <span class="form-check-label">@L["Poc_SpeedViolationLastLabel"]</span>
             </label>
         </div>
 
         <button type="submit" class="btn btn-accent" id="pocSubmitBtn">
-            <i class="fa-solid fa-plus me-2" aria-hidden="true"></i>Insert transactions along path
+            <i class="fa-solid fa-plus me-2" aria-hidden="true"></i>@L["Poc_InsertAlongPathButton"]
         </button>
-        <a class="btn btn-ghost ms-2" asp-controller="Search" asp-action="Index" asp-route-window="24h">Open search (24h)</a>
+        <a class="btn btn-ghost ms-2" asp-controller="Search" asp-action="Index" asp-route-window="24h">@L["Poc_OpenSearch24h"]</a>
     </form>
 
     <form asp-action="SavePath" method="post" id="pocSavePathForm" class="d-none" aria-hidden="true">
@@ -156,6 +162,7 @@
     <script>
         (function () {
             const initialPathIds = @Html.Raw(initialPathJson);
+            const pocI18n = @Html.Raw(pocI18nJson);
             const pick = document.getElementById("pocPickDevice");
             const addBtn = document.getElementById("pocAddDevice");
             const clearBtn = document.getElementById("pocClearPath");
@@ -171,6 +178,18 @@
             const path = Array.isArray(initialPathIds)
                 ? initialPathIds.map(function (x) { return parseInt(x, 10); }).filter(function (id) { return id > 0; })
                 : [];
+
+            function escapeHtml(s) {
+                return String(s)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;");
+            }
+
+            function deviceLabelFallback(id) {
+                return (pocI18n.deviceFmt || "").replace("{0}", String(id));
+            }
 
             function syncToContainer(container, inputName) {
                 if (!container) return;
@@ -196,15 +215,18 @@
                 listEl.innerHTML = "";
                 path.forEach(function (id, idx) {
                     const opt = pick && pick.querySelector('option[value="' + id + '"]');
-                    const label = opt ? opt.textContent : ("Device #" + id);
+                    const label = opt ? opt.textContent : deviceLabelFallback(id);
+                    const mu = escapeHtml(pocI18n.moveUp || "");
+                    const md = escapeHtml(pocI18n.moveDown || "");
+                    const rm = escapeHtml(pocI18n.remove || "");
                     const li = document.createElement("li");
                     li.className = "list-group-item d-flex align-items-center justify-content-between gap-2 poc-path-item";
                     li.innerHTML =
-                        '<span class="small"><span class="text-secondary me-2">' + (idx + 1) + ".</span>" + label + "</span>" +
+                        '<span class="small"><span class="text-secondary me-2">' + (idx + 1) + ".</span>" + escapeHtml(label) + "</span>" +
                         '<span class="btn-group btn-group-sm">' +
-                        '<button type="button" class="btn btn-outline-secondary poc-up" data-i="' + idx + '" title="Move up">↑</button>' +
-                        '<button type="button" class="btn btn-outline-secondary poc-down" data-i="' + idx + '" title="Move down">↓</button>' +
-                        '<button type="button" class="btn btn-outline-danger poc-remove" data-i="' + idx + '" title="Remove">×</button>' +
+                        '<button type="button" class="btn btn-outline-secondary poc-up" data-i="' + idx + '" title="' + mu + '">↑</button>' +
+                        '<button type="button" class="btn btn-outline-secondary poc-down" data-i="' + idx + '" title="' + md + '">↓</button>' +
+                        '<button type="button" class="btn btn-outline-danger poc-remove" data-i="' + idx + '" title="' + rm + '">×</button>' +
                         "</span>";
                     listEl.appendChild(li);
                 });
