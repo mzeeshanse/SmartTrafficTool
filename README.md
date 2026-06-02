@@ -1,6 +1,6 @@
 # SmartTrafficTool
 
-![Architecture](images/Traffic Monitoring Hub.png)
+![Architecture](SmartTrafficTool/images/Traffic Monitoring Hub.png)
 
 ## Getting started
 
