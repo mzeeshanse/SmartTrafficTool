@@ -1,5 +1,6 @@
 # Smart Traffic Tool
 
+## Traffic Monitoring Hub
 ![Traffic Monitoring Hub](SmartTrafficTool/images/TrafficMonitoringHub.png)
 
 ASP.NET Core web application for **traffic operations and ANPR (Automatic Number Plate Recognition) forensics**. It provides a command-center map, plate search, device management, and analytics dashboards backed by a local SQLite database with demo seed data.
