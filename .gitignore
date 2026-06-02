@@ -348,6 +348,10 @@ healthchecksdb
 config.json
 
 appsettings.json
+appsettings.Development.json
+**/smarttraffic.db
+**/smarttraffic.db-shm
+**/smarttraffic.db-wal
 
 log4net.config
 
