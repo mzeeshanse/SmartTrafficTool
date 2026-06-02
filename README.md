@@ -15,6 +15,17 @@ Built for **Ministry of Interior–style traffic monitoring** workflows (Qatar-c
 | **Copilot panel** | Natural-language intent helper for navigation and common actions |
 | **PoC Route Simulator** | Development/demo tool to simulate routes and append ANPR reads (config-gated) |
 
+## Screens
+
+![Traffic Monitoring Hub](SmartTrafficTool/images/TrafficMonitoringHub.png)
+![Tracking](SmartTrafficTool/images/VehicleTracking.png)
+![AI Ingestigation](SmartTrafficTool/images/AIForensicSearch.png)
+![Devices](SmartTrafficTool/images/Devices.png)
+![DevicesDetails](SmartTrafficTool/images/DevicesDetails.png)
+![Anomalies](SmartTrafficTool/images/Anomalies.png)
+![AIAssistant](SmartTrafficTool/images/AIAssistant.png)
+
+
 ## Tech stack
 
 - **.NET 10** — ASP.NET Core MVC  
