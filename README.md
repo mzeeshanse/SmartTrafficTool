@@ -4,6 +4,18 @@ ASP.NET Core web application for **traffic operations and ANPR (Automatic Number
 
 Built for **Ministry of Interior–style traffic monitoring** workflows (Qatar-centric demo geography), with **English and Arabic (Qatar)** UI support.
 
+## Screenshots
+
+| Traffic Monitoring Hub | Tracking |
+|-----------|----------------|
+| ![Traffic Monitoring Hub](SmartTrafficTool/images/TrafficMonitoringHub.png) | ![Tracking](SmartTrafficTool/images/VehicleTracking.png) |
+| AI Investigation | Devices |
+| ![AI Ingestigation](SmartTrafficTool/images/AIForensicSearch.png) | ![Devices](SmartTrafficTool/images/Devices.png) |
+| DeviceDetails | Anomalies |
+| ![DevicesDetails](SmartTrafficTool/images/DeviceDetails.png) | ![Anomalies](SmartTrafficTool/images/Anomalies.png) |
+| AIAssistant |  |
+| ![AIAssistant](SmartTrafficTool/images/AIAssistant.png) | |
+
 ## Features
 
 | Module | Description |
@@ -14,16 +26,6 @@ Built for **Ministry of Interior–style traffic monitoring** workflows (Qatar-c
 | **AI Anomalies** | Forensic analytics charts and anomaly views |
 | **Copilot panel** | Natural-language intent helper for navigation and common actions |
 | **PoC Route Simulator** | Development/demo tool to simulate routes and append ANPR reads (config-gated) |
-
-## Screens
-
-![Traffic Monitoring Hub](SmartTrafficTool/images/TrafficMonitoringHub.png)
-![Tracking](SmartTrafficTool/images/VehicleTracking.png)
-![AI Ingestigation](SmartTrafficTool/images/AIForensicSearch.png)
-![Devices](SmartTrafficTool/images/Devices.png)
-![DevicesDetails](SmartTrafficTool/images/DevicesDetails.png)
-![Anomalies](SmartTrafficTool/images/Anomalies.png)
-![AIAssistant](SmartTrafficTool/images/AIAssistant.png)
 
 
 ## Tech stack
